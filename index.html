@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binga Beach - Palawan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            },
+            colors: {
+                primary: {
+                    DEFAULT: '#007aff',
+                    hover: '#005ecb'
+                },
+                secondary: '#f0f9ff',
+                lightgreen: '#f0fff4',
+            }
+          }
+        }
+      }
+    </script>
+<style>
+/* Uniform app icon (uses currentColor) */
+.ui-icon-xs { width: 0.625rem; height: 0.625rem; background: currentColor; }
+.ui-icon-sm { width: 0.75rem;  height: 0.75rem;  background: currentColor; }
+.ui-icon-md { width: 0.875rem; height: 0.875rem; background: currentColor; }
+.ui-icon-lg { width: 1rem;    height: 1rem;    background: currentColor; }
+
+/* Social icons: inherit color, subtle hover */
+.social-links { display: inline-flex; gap: 16px; align-items: center; color: #6b7280; } /* slate-500 */
+.social-link { opacity: 0.85; transition: transform .15s ease, opacity .15s ease; }
+.social-link:hover { opacity: 1; transform: scale(1.06); }
+.social-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 6px; }
+.social-icon { display: inline-block; vertical-align: middle; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.2.1"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+      // Optional runtime env shim for static/staging hosts.
+      // Replace the value at deploy time if your host can’t inject Vite envs.
+      window.__ENV__ = Object.assign({}, window.__ENV__, {
+        VITE_PREVIEW_PIN_HASH: window.__ENV__?.VITE_PREVIEW_PIN_HASH || ""
+      });
+    </script>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

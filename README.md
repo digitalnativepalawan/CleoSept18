@@ -1,11 +1,7 @@
-<div align="center">
-
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-
-  <h1>Built with AI Studio</h2>
-
-  <p>The fastest path from prompt to production with Gemini.</p>
-
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+# Staging PIN Gate
+The /portal admin can be gated in staging via a hashed PIN.
+1) Generate a SHA-256 hex of your PIN:
+   node -e "console.log(require('crypto').createHash('sha256').update(process.argv[1],'utf8').digest('hex'))" YOUR_PIN
+2) Create a local .env with:
+   VITE_PREVIEW_PIN_HASH=<paste_hex_here>
+3) Leave the var empty to disable the gate; rebuild to apply.
