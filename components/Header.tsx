@@ -6,9 +6,10 @@ interface HeaderProps {
     onLoginClick: () => void;
     onSignUpClick: () => void;
     onPortalClick: () => void;
+    onBlogClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onPortalClick }) => {
+const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onPortalClick, onBlogClick }) => {
     const [time, setTime] = useState(new Date());
     const { currentUser, logout, loading } = useAuth();
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -33,9 +34,9 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onPortalCl
 
                     {/* Centered Navigation for desktop */}
                     <nav aria-label="Primary" className="hidden md:flex items-center space-x-2 text-gray-600 absolute left-1/2 -translate-x-1/2">
-                        <a href="#" className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+                        <button onClick={onBlogClick} className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
                             <span className="font-medium text-gray-800">Blog</span>
-                        </a>
+                        </button>
                         <button onClick={onPortalClick} className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
                             <span className="font-medium text-gray-800">Portal</span>
                         </button>
@@ -107,7 +108,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onPortalCl
                 <div id="mobile-menu" className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-lg z-20">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                         <button onClick={(e) => { e.preventDefault(); onPortalClick(); setMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Portal</button>
-                        <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Blog</a>
+                        <button onClick={(e) => { e.preventDefault(); onBlogClick(); setMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Blog</button>
                         <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">GitHub</a>
                         <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">PHP</a>
                     </div>

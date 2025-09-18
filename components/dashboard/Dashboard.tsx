@@ -114,6 +114,8 @@ const initialAllProjectData: Record<string, ProjectData> = {
 
 interface DashboardProps {
     onSwitchToLanding: () => void;
+    blogPosts: BlogPost[];
+    onAddBlogPost: (post: Omit<BlogPost, 'id'>) => void;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -174,12 +176,11 @@ const InvestmentSummary: React.FC<{ totals: CategoryTotals }> = ({ totals }) => 
 };
 
 
-const Dashboard: React.FC<DashboardProps> = ({ onSwitchToLanding }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSwitchToLanding, blogPosts, onAddBlogPost }) => {
     const [selectedProject, setSelectedProject] = useState<string | null>(null);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     
     const [allProjectData, setAllProjectData] = useState(initialAllProjectData);
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
 
     const updateProjectData = (projectName: string, updatedData: Partial<ProjectData>) => {
         setAllProjectData(prevData => ({
@@ -289,13 +290,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchToLanding }) => {
         updateProjectData(projectName, { materials: updatedMaterials });
     };
 
-    const handleAddBlogPost = (newPost: Omit<BlogPost, 'id'>) => {
-        setBlogPosts(prevPosts => [
-            { ...newPost, id: Date.now() },
-            ...prevPosts
-        ]);
-    };
-
     const categoryTotals = useMemo(() => {
         const totals: CategoryTotals = {
             tasks: { paid: 0, unpaid: 0 },
@@ -375,7 +369,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchToLanding }) => {
                 </header>
 
                 {selectedProject === 'Blog' ? (
-                    <BlogView posts={blogPosts} onAddPost={handleAddBlogPost} />
+                    <BlogView posts={blogPosts} onAddPost={onAddBlogPost} />
                 ) : selectedProject && currentProjectData ? (
                     <PasskeyGate>
                         <ProjectView
