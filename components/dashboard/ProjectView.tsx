@@ -1,15 +1,5 @@
 
 
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Modal from '../common/Modal';
 
@@ -629,6 +619,166 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({
     );
 };
 
+const banks = [
+    "Asia United Bank Corporation (AUB)",
+    "Bank of the Philippine Islands (BPI)",
+    "BDO Unibank, Inc.",
+    "Cebuana Lhuillier Rural Bank",
+    "China Banking Corporation",
+    "GoTyme Bank Corporation",
+    "Land Bank of The Philippines",
+    "Metropolitan Bank and Trust Company (MetroBank)",
+    "Philippine National Bank (PNB)",
+    "Rizal Commercial Banking Corporation (RCBC)",
+    "Security Bank Corporation",
+    "Union Bank of the Philippines (UBP)"
+];
+
+const wallets = [
+    "Coins.ph",
+    "GCash (G-Xchange, Inc.)",
+    "GrabPay (Gpay Network PH, Inc.)",
+    "Maya Philippines, Inc.",
+    "PalawanPay (PPS-PEPP Financial Services Corporation)",
+    "ShopeePay Philippines, Inc.",
+    "Starpay Corporation",
+    "USSC Money Services, Inc."
+];
+
+const PaymentListItem: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <li className="flex items-center text-gray-600">
+        <svg className="w-4 h-4 text-primary mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+        </svg>
+        <span>{children}</span>
+    </li>
+);
+
+const CopyableDetail: React.FC<{ label: string; value: string }> = ({ label, value }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(value).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+
+    return (
+        <div>
+            <dt className="text-sm font-medium text-gray-500">{label}</dt>
+            <dd className="mt-1 text-sm text-gray-900 flex items-center justify-between">
+                <span className="font-mono break-all">{value}</span>
+                <button
+                    onClick={handleCopy}
+                    className="ml-2 text-gray-400 hover:text-primary transition-colors p-1 rounded-md flex-shrink-0"
+                    aria-label={`Copy ${label}`}
+                >
+                    {copied ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    )}
+                </button>
+            </dd>
+        </div>
+    );
+};
+
+const DashboardPaymentsView: React.FC = () => {
+    return (
+        <div className="p-4 sm:p-6 bg-gray-50">
+             <div className="grid lg:grid-cols-3 gap-8 md:gap-12 bg-white p-6 rounded-lg border border-gray-200">
+                <div className="lg:col-span-1 text-center flex flex-col items-center">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Scan to Pay Binga Beach</h3>
+                    <div className="bg-white p-4 border rounded-lg shadow-sm inline-block">
+                         <img 
+                            src="https://id-preview--6747c8dc-fab2-4413-8d2e-7d099ccefffb.lovable.app/assets/qr-payment-BlfmHU0J.png" 
+                            alt="Binga Beach QR Ph Code" 
+                            className="w-64 h-auto mx-auto"
+                        />
+                    </div>
+                    <p className="mt-4 text-gray-500 text-sm">
+                        Use our QR Ph code for seamless payments from your preferred bank or e-wallet.
+                    </p>
+                </div>
+
+                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 className="font-semibold text-lg text-gray-800 mb-4 pb-2 border-b">
+                            Supported Banks
+                        </h4>
+                        <ul className="space-y-3 text-sm">
+                            {banks.map(bank => <PaymentListItem key={bank}>{bank}</PaymentListItem>)}
+                        </ul>
+                    </div>
+                     <div>
+                        <h4 className="font-semibold text-lg text-gray-800 mb-4 pb-2 border-b">
+                            Supported E-Wallets
+                        </h4>
+                        <ul className="space-y-3 text-sm">
+                            {wallets.map(wallet => <PaymentListItem key={wallet}>{wallet}</PaymentListItem>)}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-8 bg-white p-6 rounded-lg border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b">Wire Transfer / Direct Deposit</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div>
+                        <h4 className="font-semibold text-lg text-gray-800 mb-4">Beneficiary Information</h4>
+                        <dl className="space-y-4">
+                            <CopyableDetail label="Beneficiary Name" value="DAVID LE SMITH" />
+                            <div>
+                                <dt className="text-sm font-medium text-gray-500">Beneficiary Address</dt>
+                                <dd className="mt-1 text-sm text-gray-900">
+                                    LOT 3947E, BRGY OF BINGA SAN VICENTE, PALAWAN, PHILIPPINES
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-lg text-gray-800 mb-4">Bank Information</h4>
+                        <dl className="space-y-4">
+                            <CopyableDetail label="Account Number" value="200033527291" />
+                            <CopyableDetail label="Bank Name" value="EAST WEST BANKING CORPORATION" />
+                            <CopyableDetail label="SWIFT Code" value="EWBCPHMM" />
+                            <div>
+                                <dt className="text-sm font-medium text-gray-500">Bank Address</dt>
+                                <dd className="mt-1 text-sm text-gray-900">
+                                    5TH AVE CNR, 23RD ST, BONIFACIO GLO TAGUIG CITY LUZ 1634, PHILIPPINES
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-8 bg-white p-6 rounded-lg border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Pay with PayPal</h3>
+                <p className="text-sm text-gray-500 mb-6">Click the button below to pay securely with your PayPal account or a credit/debit card.</p>
+                <a
+                    href="https://paypal.me/bingabeachbrothers?locale.x=en_US&country.x=PH"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center bg-[#00457C] hover:bg-[#003057] text-white font-semibold py-3 px-6 rounded-lg shadow-sm transition-colors duration-300"
+                    aria-label="Pay with PayPal"
+                >
+                    <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8.33 20.219c0 .547-.441.988-.988.988h-1.04a.988.988 0 01-.988-.988v-5.859c0-.547.441-.988.988-.988h2.028c.547 0 .988.441.988.988v5.859zM15.828 21.207h-2.285a.738.738 0 01-.735-.791l-.25-1.562-.016-.078c-.015-.094-.031-.172-.063-.234-.359-1.062-1.297-1.672-2.5-1.672h-.828c-.422 0-.672-.25-.797-.64l-2.063-6.282c-.078-.234-.031-.406.125-.515.156-.11.375-.125.61-.125h2.953c.484 0 .812.313.937.813l.641 4.11c.14.89.844 1.515 1.734 1.515h.422c.906 0 1.64-.609 1.734-1.515l.406-2.5c.079-.485.406-.813.891-.813h1.437c.313 0 .516.14.438.453l-1.282 5.094c-.156.625.328 1.109.969 1.109h.734c.547 0 .988.441.988.988v.922c0 .547-.441.988-.988.988zM24 14.344c0 2.219-2.094 3.766-4.969 3.766h-1.562c-.469 0-.828-.328-.937-.812l-.422-2.578c-.125-.89-.844-1.516-1.734-1.516h-.422c-1.156 0-2.14.797-2.406 1.953l-.266 1.344c-.093.468-.453.781-.922.781h-1.547c-.547 0-.988-.441-.988-.988v-1.125c0-.468.328-.859.781-.953l.234-.047c.812-.156 1.437-.828 1.594-1.687l.953-5.75c.109-.703.656-1.187 1.36-1.187h1.484c.484 0 .812.312.937.812l.64 4.109c.141.891.844 1.516 1.735 1.516h.421c.907 0 1.641-.609 1.735-1.515l.406-2.5c.078-.485.406-.813.89-.813h.985c2.359 0 4.281 1.5 4.281 3.5z"/>
+                    </svg>
+                    Pay with PayPal
+                </a>
+            </div>
+        </div>
+    )
+};
+
 
 interface AddTaskModalProps {
     isOpen: boolean;
@@ -953,7 +1103,7 @@ const ImagePreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; imageU
     );
 };
 
-type ViewType = 'Tasks' | 'Labor' | 'Materials' | 'Invoices';
+type ViewType = 'Tasks' | 'Labor' | 'Materials' | 'Invoices' | 'Payments';
 
 interface ProjectViewProps {
     projectName: string;
@@ -1008,11 +1158,12 @@ export const ProjectView: React.FC<ProjectViewProps> = ({
         return unpaidTasks + unpaidLabor + unpaidMaterials;
     }, [tasks, labor, materials]);
 
-    const tabs: { name: ViewType; count: number }[] = [
+    const tabs: { name: ViewType; count?: number }[] = [
         { name: 'Tasks', count: tasks.length },
         { name: 'Labor', count: labor.length },
         { name: 'Materials', count: materials.length },
         { name: 'Invoices', count: unpaidItemsCount },
+        { name: 'Payments' },
     ];
 
     return (
@@ -1027,7 +1178,7 @@ export const ProjectView: React.FC<ProjectViewProps> = ({
                                     onClick={() => setActiveView(tab.name)}
                                     className={`px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeView === tab.name ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    {tab.name} <span className="ml-1.5 bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">{tab.count}</span>
+                                    {tab.name} {typeof tab.count !== 'undefined' && <span className="ml-1.5 bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">{tab.count}</span>}
                                 </button>
                             ))}
                         </div>
@@ -1062,6 +1213,7 @@ export const ProjectView: React.FC<ProjectViewProps> = ({
                                 onToggleLaborPayment={onToggleLaborPayment}
                                 onToggleMaterialPayment={onToggleMaterialPayment}
                             />}
+                        {activeView === 'Payments' && <DashboardPaymentsView />}
                     </div>
                 </div>
             </div>

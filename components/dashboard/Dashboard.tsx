@@ -1,7 +1,9 @@
 
+
 import React, { useState, useMemo } from 'react';
 import Sidebar from '../Sidebar';
 import ProjectCard from './ProjectCard';
+import PasskeyGate from '../PasskeyGate';
 import { ProjectView, Task, Labor, Material, Invoice, PaymentStatus, TaskStatus } from './ProjectView';
 import BlogView, { BlogPost } from './BlogView';
 
@@ -375,26 +377,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchToLanding }) => {
                 {selectedProject === 'Blog' ? (
                     <BlogView posts={blogPosts} onAddPost={handleAddBlogPost} />
                 ) : selectedProject && currentProjectData ? (
-                    <ProjectView
-                        key={selectedProject}
-                        projectName={selectedProject}
-                        tasks={currentProjectData.tasks}
-                        labor={currentProjectData.labor}
-                        materials={currentProjectData.materials}
-                        invoices={currentProjectData.invoices}
-                        onToggleTaskStatus={(id) => handleToggleTaskStatus(selectedProject, id)}
-                        onToggleTaskPayment={(id) => handleToggleTaskPaymentStatus(selectedProject, id)}
-                        onAddTask={(taskData) => handleAddTask(selectedProject, taskData)}
-                        onDeleteTask={(id) => handleDeleteTask(selectedProject, id)}
-                        onToggleLaborPayment={(id) => handleToggleLaborPayment(selectedProject, id)}
-                        onUpdateLabor={(item) => handleUpdateLabor(selectedProject, item)}
-                        onDeleteLabor={(id) => handleDeleteLabor(selectedProject, id)}
-                        onAddLabor={(laborData) => handleAddLabor(selectedProject, laborData)}
-                        onToggleMaterialPayment={(id) => handleToggleMaterialPayment(selectedProject, id)}
-                        onAddMaterial={(materialData) => handleAddMaterial(selectedProject, materialData)}
-                        onDeleteMaterial={(id) => handleDeleteMaterial(selectedProject, id)}
-                        onUpdateMaterial={(item) => handleUpdateMaterial(selectedProject, item)}
-                    />
+                    <PasskeyGate>
+                        <ProjectView
+                            key={selectedProject}
+                            projectName={selectedProject}
+                            tasks={currentProjectData.tasks}
+                            labor={currentProjectData.labor}
+                            materials={currentProjectData.materials}
+                            invoices={currentProjectData.invoices}
+                            onToggleTaskStatus={(id) => handleToggleTaskStatus(selectedProject, id)}
+                            onToggleTaskPayment={(id) => handleToggleTaskPaymentStatus(selectedProject, id)}
+                            onAddTask={(taskData) => handleAddTask(selectedProject, taskData)}
+                            onDeleteTask={(id) => handleDeleteTask(selectedProject, id)}
+                            onToggleLaborPayment={(id) => handleToggleLaborPayment(selectedProject, id)}
+                            onUpdateLabor={(item) => handleUpdateLabor(selectedProject, item)}
+                            onDeleteLabor={(id) => handleDeleteLabor(selectedProject, id)}
+                            onAddLabor={(laborData) => handleAddLabor(selectedProject, laborData)}
+                            onToggleMaterialPayment={(id) => handleToggleMaterialPayment(selectedProject, id)}
+                            onAddMaterial={(materialData) => handleAddMaterial(selectedProject, materialData)}
+                            onDeleteMaterial={(id) => handleDeleteMaterial(selectedProject, id)}
+                            onUpdateMaterial={(item) => handleUpdateMaterial(selectedProject, item)}
+                        />
+                    </PasskeyGate>
                 ) : (
                     <main className="flex-1 overflow-y-auto p-8">
                         <h2 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h2>
