@@ -522,7 +522,32 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({
                     {consolidatedLabor.length > 0 && (
                         <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-2">Consolidated Unpaid Labor</h3>
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+                             {/* Mobile Card View */}
+                            <div className="md:hidden space-y-3">
+                                {consolidatedLabor.map(item => (
+                                    <div key={item.name} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <p className="font-medium text-gray-800">{item.name}</p>
+                                                <p className="text-xs text-gray-500">{item.dateRange}</p>
+                                            </div>
+                                            <StatusBadge status="Unpaid" onClick={() => handleToggleConsolidatedLabor(item.entryIds)} />
+                                        </div>
+                                        <div className="space-y-2 text-sm border-t pt-3">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Days Worked</span>
+                                                <span>{item.daysWorked}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Total Due</span>
+                                                <span className="font-semibold text-gray-800">₱{item.totalAmount.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Desktop Table View */}
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto hidden md:block">
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="text-left text-gray-500 bg-gray-50">
@@ -553,7 +578,28 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({
                     {unpaidMaterials.length > 0 && (
                         <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-2">Unpaid Materials</h3>
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+                             {/* Mobile Card View */}
+                            <div className="md:hidden space-y-3">
+                                {unpaidMaterials.map(item => (
+                                    <div key={`material-card-${item.id}`} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <p className="font-medium text-gray-800">{item.item}</p>
+                                                <p className="text-xs text-gray-500">{item.supplier}</p>
+                                            </div>
+                                            <StatusBadge status={item.paymentStatus} onClick={() => onToggleMaterialPayment(item.id)} />
+                                        </div>
+                                        <div className="space-y-2 text-sm border-t pt-3">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Total</span>
+                                                <span className="font-semibold text-gray-800">₱{item.total.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Desktop Table View */}
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto hidden md:block">
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="text-left text-gray-500 bg-gray-50">
@@ -589,7 +635,28 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({
                      {unpaidTasks.length > 0 && (
                         <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-2">Unpaid Tasks</h3>
-                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+                            {/* Mobile Card View */}
+                            <div className="md:hidden space-y-3">
+                                {unpaidTasks.map(task => (
+                                    <div key={`task-card-${task.id}`} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <p className="font-medium text-gray-800">{task.name}</p>
+                                                <p className="text-xs text-gray-500">Due: {task.dueDate}</p>
+                                            </div>
+                                            <StatusBadge status={task.paymentStatus} onClick={() => onToggleTaskPayment(task.id)} />
+                                        </div>
+                                        <div className="space-y-2 text-sm border-t pt-3">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Cost</span>
+                                                <span className="font-semibold text-gray-800">₱{task.cost.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                             {/* Desktop Table View */}
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto hidden md:block">
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="text-left text-gray-500 bg-gray-50">
@@ -769,9 +836,6 @@ const DashboardPaymentsView: React.FC = () => {
                     className="inline-flex items-center justify-center bg-[#00457C] hover:bg-[#003057] text-white font-semibold py-3 px-6 rounded-lg shadow-sm transition-colors duration-300"
                     aria-label="Pay with PayPal"
                 >
-                    <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8.33 20.219c0 .547-.441.988-.988.988h-1.04a.988.988 0 01-.988-.988v-5.859c0-.547.441-.988.988-.988h2.028c.547 0 .988.441.988.988v5.859zM15.828 21.207h-2.285a.738.738 0 01-.735-.791l-.25-1.562-.016-.078c-.015-.094-.031-.172-.063-.234-.359-1.062-1.297-1.672-2.5-1.672h-.828c-.422 0-.672-.25-.797-.64l-2.063-6.282c-.078-.234-.031-.406.125-.515.156-.11.375-.125.61-.125h2.953c.484 0 .812.313.937.813l.641 4.11c.14.89.844 1.515 1.734 1.515h.422c.906 0 1.64-.609 1.734-1.515l.406-2.5c.079-.485.406-.813.891-.813h1.437c.313 0 .516.14.438.453l-1.282 5.094c-.156.625.328 1.109.969 1.109h.734c.547 0 .988.441.988.988v.922c0 .547-.441.988-.988.988zM24 14.344c0 2.219-2.094 3.766-4.969 3.766h-1.562c-.469 0-.828-.328-.937-.812l-.422-2.578c-.125-.89-.844-1.516-1.734-1.516h-.422c-1.156 0-2.14.797-2.406 1.953l-.266 1.344c-.093.468-.453.781-.922.781h-1.547c-.547 0-.988-.441-.988-.988v-1.125c0-.468.328-.859.781-.953l.234-.047c.812-.156 1.437-.828 1.594-1.687l.953-5.75c.109-.703.656-1.187 1.36-1.187h1.484c.484 0 .812.312.937.812l.64 4.109c.141.891.844 1.516 1.735 1.516h.421c.907 0 1.641-.609 1.735-1.515l.406-2.5c.078-.485.406-.813.89-.813h.985c2.359 0 4.281 1.5 4.281 3.5z"/>
-                    </svg>
                     Pay with PayPal
                 </a>
             </div>
@@ -1171,7 +1235,7 @@ export const ProjectView: React.FC<ProjectViewProps> = ({
             <div className="p-4 sm:p-6">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b gap-4">
-                        <div className="flex border-b sm:border-b-0 -mx-4 px-4 sm:m-0 sm:p-0 overflow-x-auto">
+                        <div className="flex flex-wrap sm:flex-nowrap border-b sm:border-b-0 -mx-4 px-4 sm:m-0 sm:p-0 sm:overflow-x-auto">
                              {tabs.map(tab => (
                                 <button
                                     key={tab.name}
