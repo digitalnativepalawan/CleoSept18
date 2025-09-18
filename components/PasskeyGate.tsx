@@ -65,4 +65,31 @@ const PasskeyGate: React.FC<PasskeyGateProps> = ({ children }) => {
                             id="passkey-input"
                             type="password"
                             value={passkey}
-                            onChange={(e) => setPasskey(e.target
+                            // FIX: Correctly get the value from the event target and complete the component.
+                            onChange={(e) => setPasskey(e.target.value)}
+                            className="w-full px-4 py-2 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                            placeholder="••••••"
+                            autoFocus
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors duration-300 disabled:bg-blue-300 disabled:cursor-wait"
+                    >
+                        {isSubmitting ? 'Verifying...' : 'Submit'}
+                    </button>
+                    {error && (
+                        <p role="alert" className="text-red-600 text-sm text-center mt-4">
+                            {error}
+                        </p>
+                    )}
+                </form>
+            </div>
+        </div>
+    );
+};
+
+// FIX: Added missing default export.
+export default PasskeyGate;
