@@ -1,18 +1,31 @@
 
 
-import React, { useState, useEffect, useMemo } from 'react';
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Modal from '../common/Modal';
 
 export type PaymentStatus = 'Paid' | 'Unpaid';
-export type CompletionStatus = 'Done' | 'In Progress';
+export type TaskStatus = 'Backlog' | 'In Progress' | 'Done';
 
 export interface Task {
     id: number;
     name: string;
-    completionStatus: CompletionStatus;
+    status: TaskStatus;
+    type: string;
     dueDate: string;
     cost: number;
     paymentStatus: PaymentStatus;
+    notes: string;
+    imageUrl: string;
 }
 export interface Labor {
     id: number;
@@ -21,15 +34,16 @@ export interface Labor {
     date: string;
     hours: number;
     total: number;
-    status: PaymentStatus;
+    paymentStatus: PaymentStatus;
 }
 export interface Material {
     id: number;
     item: string;
     supplier: string;
     total: number;
-    status: PaymentStatus;
+    paymentStatus: PaymentStatus;
     notes: string;
+    imageUrl?: string;
 }
 
 export interface Invoice {
@@ -42,13 +56,11 @@ export interface Invoice {
     link?: string;
 }
 
-
-type Status = CompletionStatus | PaymentStatus;
-
-const StatusBadge: React.FC<{ status: Status, onClick?: () => void }> = ({ status, onClick }) => {
+const StatusBadge: React.FC<{ status: TaskStatus | PaymentStatus, onClick?: () => void }> = ({ status, onClick }) => {
     const statusClasses = {
         'Done': 'bg-green-100 text-green-800',
         'In Progress': 'bg-blue-100 text-blue-800',
+        'Backlog': 'bg-gray-100 text-gray-800',
         'Paid': 'bg-green-100 text-green-800',
         'Unpaid': 'bg-red-100 text-red-800',
     };
@@ -143,10 +155,11 @@ const SortIndicator: React.FC<{
 interface TasksViewProps {
     tasks: Task[];
     onTogglePayment: (id: number) => void;
-    onToggleCompletion: (id: number) => void;
+    onDelete: (id: number) => void;
+    onToggleStatus: (id: number) => void;
 }
 
-const TasksView: React.FC<TasksViewProps> = ({ tasks, onTogglePayment, onToggleCompletion }) => {
+const TasksView: React.FC<TasksViewProps> = ({ tasks, onTogglePayment, onDelete, onToggleStatus }) => {
     const { items: sortedTasks, requestSort, sortConfig } = useSortableData<Task>(tasks, { key: 'dueDate', direction: 'ascending' });
 
     return (
@@ -154,23 +167,19 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, onTogglePayment, onToggleC
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3 p-4 bg-gray-50 sm:bg-transparent sm:p-0">
                 {sortedTasks.map((task) => (
-                    <div key={task.id} className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm ${task.completionStatus === 'Done' ? 'opacity-70' : ''}`}>
-                        <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-start flex-1 min-w-0">
-                                <input
-                                    type="checkbox"
-                                    checked={task.completionStatus === 'Done'}
-                                    onChange={() => onToggleCompletion(task.id)}
-                                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer mt-0.5 flex-shrink-0"
-                                    aria-label={`Mark task ${task.name} as ${task.completionStatus === 'Done' ? 'not done' : 'done'}`}
-                                />
-                                <span className={`font-medium text-gray-800 ml-3 truncate ${task.completionStatus === 'Done' ? 'line-through text-gray-500' : ''}`}>{task.name}</span>
-                            </div>
+                    <div key={task.id} className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative ${task.status === 'Done' ? 'opacity-70' : ''}`}>
+                        <div className="absolute top-2 right-2">
+                            <button onClick={() => onDelete(task.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" aria-label="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                        <div className="flex items-start justify-between mb-3 pr-8">
+                            <p className={`font-medium text-gray-800 truncate ${task.status === 'Done' ? 'line-through text-gray-500' : ''}`}>{task.name}</p>
                         </div>
                         <div className="space-y-2 text-sm border-t pt-3">
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-500 font-medium">Status</span>
-                                <StatusBadge status={task.completionStatus} />
+                                <StatusBadge status={task.status} onClick={() => onToggleStatus(task.id)} />
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-500 font-medium">Payment</span>
@@ -194,14 +203,11 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, onTogglePayment, onToggleC
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="text-left text-gray-500">
-                            <th className="p-3 w-12 text-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            </th>
                             <th className="p-3 font-medium">
                                 <button onClick={() => requestSort('name')} className="flex items-center group">Task <SortIndicator sortConfig={sortConfig} sortKey="name" /></button>
                             </th>
                             <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('completionStatus')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="completionStatus" /></button>
+                                <button onClick={() => requestSort('status')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="status" /></button>
                             </th>
                              <th className="p-3 font-medium">
                                 <button onClick={() => requestSort('paymentStatus')} className="flex items-center group">Payment <SortIndicator sortConfig={sortConfig} sortKey="paymentStatus" /></button>
@@ -212,25 +218,22 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, onTogglePayment, onToggleC
                             <th className="p-3 font-medium text-right">
                                 <button onClick={() => requestSort('cost')} className="flex items-center ml-auto group">Cost <SortIndicator sortConfig={sortConfig} sortKey="cost" /></button>
                             </th>
+                            <th className="p-3 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedTasks.map((task) => (
-                            <tr key={task.id} className={`border-b border-gray-200 bg-white transition-all ${task.completionStatus === 'Done' ? 'opacity-60' : ''}`}>
-                                 <td className="p-3 text-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={task.completionStatus === 'Done'}
-                                        onChange={() => onToggleCompletion(task.id)}
-                                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                                        aria-label={`Mark task ${task.name} as ${task.completionStatus === 'Done' ? 'not done' : 'done'}`}
-                                    />
-                                </td>
-                                <td className={`p-3 text-gray-800 font-medium transition-colors ${task.completionStatus === 'Done' ? 'line-through text-gray-500' : ''}`}>{task.name}</td>
-                                <td className="p-3"><StatusBadge status={task.completionStatus} /></td>
+                            <tr key={task.id} className={`border-b border-gray-200 bg-white transition-all ${task.status === 'Done' ? 'opacity-60' : ''}`}>
+                                <td className={`p-3 text-gray-800 font-medium transition-colors ${task.status === 'Done' ? 'line-through text-gray-500' : ''}`}>{task.name}</td>
+                                <td className="p-3"><StatusBadge status={task.status} onClick={() => onToggleStatus(task.id)} /></td>
                                 <td className="p-3"><StatusBadge status={task.paymentStatus} onClick={() => onTogglePayment(task.id)} /></td>
                                 <td className="p-3 text-gray-600">{task.dueDate}</td>
                                 <td className="p-3 text-gray-600 text-right">₱{task.cost.toLocaleString()}</td>
+                                <td className="p-3 text-right">
+                                    <button onClick={() => onDelete(task.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" aria-label="Delete">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -243,17 +246,27 @@ const TasksView: React.FC<TasksViewProps> = ({ tasks, onTogglePayment, onToggleC
 interface LaborViewProps {
     labor: Labor[];
     onTogglePayment: (id: number) => void;
+    onEdit: (item: Labor) => void;
+    onDelete: (id: number) => void;
 }
 
-const LaborView: React.FC<LaborViewProps> = ({ labor, onTogglePayment }) => {
+const LaborView: React.FC<LaborViewProps> = ({ labor, onTogglePayment, onEdit, onDelete }) => {
     const { items: sortedLabor, requestSort, sortConfig } = useSortableData<Labor>(labor, { key: 'date', direction: 'descending' });
     return (
         <>
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3 p-4 bg-gray-50 sm:bg-transparent sm:p-0">
                 {sortedLabor.map((item) => (
-                    <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                        <div className="mb-3">
+                    <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative">
+                        <div className="absolute top-2 right-2 flex items-center space-x-1">
+                            <button onClick={() => onEdit(item)} className="text-gray-400 hover:text-primary p-1 rounded-full transition-colors" aria-label="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L13.196 5.196a2.5 2.5 0 012.036-.536z" /></svg>
+                            </button>
+                            <button onClick={() => onDelete(item.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" aria-label="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                        <div className="mb-3 pr-16">
                             <p className="font-medium text-gray-800">{item.name}</p>
                             <p className="text-xs text-gray-500">{item.description}</p>
                         </div>
@@ -272,7 +285,7 @@ const LaborView: React.FC<LaborViewProps> = ({ labor, onTogglePayment }) => {
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-500 font-medium">Status</span>
-                                <StatusBadge status={item.status} onClick={() => onTogglePayment(item.id)}/>
+                                <StatusBadge status={item.paymentStatus} onClick={() => onTogglePayment(item.id)}/>
                             </div>
                         </div>
                     </div>
@@ -297,21 +310,29 @@ const LaborView: React.FC<LaborViewProps> = ({ labor, onTogglePayment }) => {
                                  <button onClick={() => requestSort('total')} className="flex items-center ml-auto group">Total (₱) <SortIndicator sortConfig={sortConfig} sortKey="total" /></button>
                             </th>
                             <th className="p-3 font-medium">
-                                 <button onClick={() => requestSort('status')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="status" /></button>
+                                 <button onClick={() => requestSort('paymentStatus')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="paymentStatus" /></button>
                             </th>
+                            <th className="p-3 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedLabor.map((item) => (
                             <tr key={item.id} className="border-b border-gray-200 bg-white">
-                                <td className="p-3">
-                                    <div className="font-medium text-gray-800">{item.name}</div>
-                                    <div className="text-gray-500 text-xs">{item.description}</div>
-                                </td>
+                                <td className="p-3 text-gray-800 font-medium">{item.name}</td>
                                 <td className="p-3 text-gray-600">{item.date}</td>
                                 <td className="p-3 text-gray-600 text-right">{item.hours}</td>
-                                <td className="p-3 text-gray-600 text-right">₱{item.total.toLocaleString()}</td>
-                                <td className="p-3"><StatusBadge status={item.status} onClick={() => onTogglePayment(item.id)}/></td>
+                                <td className="p-3 text-gray-600 text-right">{item.total.toLocaleString()}</td>
+                                <td className="p-3"><StatusBadge status={item.paymentStatus} onClick={() => onTogglePayment(item.id)} /></td>
+                                <td className="p-3 text-right">
+                                    <div className="flex items-center justify-end space-x-1">
+                                        <button onClick={() => onEdit(item)} className="text-gray-400 hover:text-primary p-1 rounded-full transition-colors" aria-label="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L13.196 5.196a2.5 2.5 0 012.036-.536z" /></svg>
+                                        </button>
+                                        <button onClick={() => onDelete(item.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" aria-label="Delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -324,28 +345,47 @@ const LaborView: React.FC<LaborViewProps> = ({ labor, onTogglePayment }) => {
 interface MaterialsViewProps {
     materials: Material[];
     onTogglePayment: (id: number) => void;
+    onDelete: (id: number) => void;
+    onEdit: (item: Material) => void;
+    onViewImage: (url: string) => void;
 }
-const MaterialsView: React.FC<MaterialsViewProps> = ({ materials, onTogglePayment }) => {
-    const { items: sortedMaterials, requestSort, sortConfig } = useSortableData<Material>(materials);
+
+const MaterialsView: React.FC<MaterialsViewProps> = ({ materials, onTogglePayment, onDelete, onEdit, onViewImage }) => {
+    const { items: sortedMaterials, requestSort, sortConfig } = useSortableData<Material>(materials, { key: 'item', direction: 'ascending' });
+
     return (
         <>
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3 p-4 bg-gray-50 sm:bg-transparent sm:p-0">
-                {sortedMaterials.map((material) => (
-                    <div key={material.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                        <p className="font-medium text-gray-800 mb-3 truncate">{material.item}</p>
-                        <div className="space-y-2 text-sm border-t pt-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-500 font-medium">Supplier</span>
-                                <span className="text-gray-700 truncate">{material.supplier}</span>
+                {sortedMaterials.map((item) => (
+                    <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative">
+                        <div className="absolute top-2 right-2 flex items-center space-x-1">
+                             <button onClick={() => onEdit(item)} className="text-gray-400 hover:text-primary p-1 rounded-full transition-colors" aria-label="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L13.196 5.196a2.5 2.5 0 012.036-.536z" /></svg>
+                            </button>
+                             <button onClick={() => onDelete(item.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" aria-label="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                        <div className="mb-3 pr-16">
+                            <div className="flex items-center">
+                                <p className="font-medium text-gray-800">{item.item}</p>
+                                {item.imageUrl && (
+                                    <button onClick={() => onViewImage(item.imageUrl!)} className="ml-2 text-primary hover:text-primary-hover" aria-label="View Image">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                    </button>
+                                )}
                             </div>
-                            <div className="flex justify-between items-center">
+                            <p className="text-xs text-gray-500">{item.supplier}</p>
+                        </div>
+                        <div className="space-y-2 text-sm border-t pt-3">
+                             <div className="flex justify-between items-center">
                                 <span className="text-gray-500 font-medium">Total</span>
-                                <span className="text-gray-800 font-semibold">₱{material.total.toLocaleString()}</span>
+                                <span className="text-gray-800 font-semibold">₱{item.total.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-500 font-medium">Status</span>
-                                <StatusBadge status={material.status} onClick={() => onTogglePayment(material.id)} />
+                                <StatusBadge status={item.paymentStatus} onClick={() => onTogglePayment(item.id)}/>
                             </div>
                         </div>
                     </div>
@@ -357,117 +397,38 @@ const MaterialsView: React.FC<MaterialsViewProps> = ({ materials, onTogglePaymen
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="text-left text-gray-500">
-                            <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('item')} className="flex items-center group">Item <SortIndicator sortConfig={sortConfig} sortKey="item" /></button>
-                            </th>
-                            <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('supplier')} className="flex items-center group">Supplier <SortIndicator sortConfig={sortConfig} sortKey="supplier" /></button>
-                            </th>
-                            <th className="p-3 font-medium text-right">
-                                 <button onClick={() => requestSort('total')} className="flex items-center ml-auto group">Total <SortIndicator sortConfig={sortConfig} sortKey="total" /></button>
-                            </th>
-                            <th className="p-3 font-medium">
-                                 <button onClick={() => requestSort('status')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="status" /></button>
-                            </th>
+                            <th className="p-3 font-medium"><button onClick={() => requestSort('item')} className="flex items-center group">Item <SortIndicator sortConfig={sortConfig} sortKey="item" /></button></th>
+                            <th className="p-3 font-medium"><button onClick={() => requestSort('supplier')} className="flex items-center group">Supplier <SortIndicator sortConfig={sortConfig} sortKey="supplier" /></button></th>
+                            <th className="p-3 font-medium text-right"><button onClick={() => requestSort('total')} className="flex items-center ml-auto group">Total (₱) <SortIndicator sortConfig={sortConfig} sortKey="total" /></button></th>
+                            <th className="p-3 font-medium"><button onClick={() => requestSort('paymentStatus')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="paymentStatus" /></button></th>
+                            <th className="p-3 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedMaterials.map((material) => (
-                            <tr key={material.id} className="border-b border-gray-200 bg-white">
-                                <td className="p-3 font-medium text-gray-800">{material.item}</td>
-                                <td className="p-3 text-gray-600">{material.supplier}</td>
-                                <td className="p-3 text-gray-600 text-right">₱{material.total.toLocaleString()}</td>
-                                <td className="p-3"><StatusBadge status={material.status} onClick={() => onTogglePayment(material.id)} /></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </>
-    );
-};
-
-interface InvoicesViewProps {
-    invoices: Invoice[];
-    onTogglePayment: (id: number) => void;
-}
-const InvoicesView: React.FC<InvoicesViewProps> = ({ invoices, onTogglePayment }) => {
-    const { items: sortedInvoices, requestSort, sortConfig } = useSortableData<Invoice>(invoices, { key: 'dueDate', direction: 'ascending' });
-    return (
-        <>
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3 p-4 bg-gray-50 sm:bg-transparent sm:p-0">
-                {sortedInvoices.map((invoice) => (
-                    <div key={invoice.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                        <div className="flex justify-between items-start mb-3">
-                            <p className="font-medium text-gray-800 truncate">{invoice.invoiceNumber}</p>
-                            {invoice.link ? (
-                                <a href={invoice.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center flex-shrink-0 ml-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                </a>
-                            ) : null}
-                        </div>
-                        <div className="space-y-2 text-sm border-t pt-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-500 font-medium">Supplier</span>
-                                <span className="text-gray-700 truncate">{invoice.supplier}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-500 font-medium">Due Date</span>
-                                <span className="text-gray-700">{invoice.dueDate}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-500 font-medium">Total</span>
-                                <span className="text-gray-800 font-semibold">₱{invoice.total.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-500 font-medium">Status</span>
-                                <StatusBadge status={invoice.status} onClick={() => onTogglePayment(invoice.id)} />
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="overflow-x-auto hidden md:block">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="text-left text-gray-500">
-                            <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('invoiceNumber')} className="flex items-center group">Invoice # <SortIndicator sortConfig={sortConfig} sortKey="invoiceNumber" /></button>
-                            </th>
-                            <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('supplier')} className="flex items-center group">Supplier <SortIndicator sortConfig={sortConfig} sortKey="supplier" /></button>
-                            </th>
-                            <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('dueDate')} className="flex items-center group">Due Date <SortIndicator sortConfig={sortConfig} sortKey="dueDate" /></button>
-                            </th>
-                            <th className="p-3 font-medium text-right">
-                                <button onClick={() => requestSort('total')} className="flex items-center ml-auto group">Total <SortIndicator sortConfig={sortConfig} sortKey="total" /></button>
-                            </th>
-                            <th className="p-3 font-medium">
-                                <button onClick={() => requestSort('status')} className="flex items-center group">Status <SortIndicator sortConfig={sortConfig} sortKey="status" /></button>
-                            </th>
-                            <th className="p-3 font-medium text-center">Link</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sortedInvoices.map((invoice) => (
-                            <tr key={invoice.id} className="border-b border-gray-200 bg-white">
-                                <td className="p-3 font-medium text-gray-800">{invoice.invoiceNumber}</td>
-                                <td className="p-3 text-gray-600">{invoice.supplier}</td>
-                                <td className="p-3 text-gray-600">{invoice.dueDate}</td>
-                                <td className="p-3 text-gray-600 text-right">₱{invoice.total.toLocaleString()}</td>
-                                <td className="p-3"><StatusBadge status={invoice.status} onClick={() => onTogglePayment(invoice.id)} /></td>
-                                <td className="p-3 text-center">
-                                    {invoice.link ? (
-                                        <a href={invoice.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-400">-</span>
-                                    )}
+                        {sortedMaterials.map((item) => (
+                            <tr key={item.id} className="border-b border-gray-200 bg-white">
+                                <td className="p-3 text-gray-800 font-medium">
+                                    <div className="flex items-center">
+                                        <span>{item.item}</span>
+                                        {item.imageUrl && (
+                                            <button onClick={() => onViewImage(item.imageUrl!)} className="ml-2 text-primary hover:text-primary-hover" aria-label="View Image">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                            </button>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="p-3 text-gray-600">{item.supplier}</td>
+                                <td className="p-3 text-gray-600 text-right">{item.total.toLocaleString()}</td>
+                                <td className="p-3"><StatusBadge status={item.paymentStatus} onClick={() => onTogglePayment(item.id)} /></td>
+                                <td className="p-3 text-right">
+                                    <div className="flex items-center justify-end space-x-1">
+                                        <button onClick={() => onEdit(item)} className="text-gray-400 hover:text-primary p-1 rounded-full transition-colors" aria-label="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L13.196 5.196a2.5 2.5 0 012.036-.536z" /></svg>
+                                        </button>
+                                        <button onClick={() => onDelete(item.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full transition-colors" aria-label="Delete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -478,179 +439,521 @@ const InvoicesView: React.FC<InvoicesViewProps> = ({ invoices, onTogglePayment }
     );
 };
 
+interface InvoicesViewProps {
+    tasks: Task[];
+    labor: Labor[];
+    materials: Material[];
+    onToggleTaskPayment: (id: number) => void;
+    onToggleLaborPayment: (id: number) => void;
+    onToggleMaterialPayment: (id: number) => void;
+}
 
-const AddMaterialModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
-    const [quantity, setQuantity] = useState(1);
-    const [unitCost, setUnitCost] = useState(0);
-    const [totalCost, setTotalCost] = useState(0);
+interface ConsolidatedLabor {
+    name: string;
+    totalAmount: number;
+    daysWorked: number;
+    dateRange: string;
+    entryIds: number[];
+}
 
-    useEffect(() => {
-        setTotalCost(quantity * unitCost);
-    }, [quantity, unitCost]);
+const InvoicesView: React.FC<InvoicesViewProps> = ({
+    tasks,
+    labor,
+    materials,
+    onToggleTaskPayment,
+    onToggleLaborPayment,
+    onToggleMaterialPayment,
+}) => {
+    const unpaidTasks = useMemo(() => tasks.filter(t => t.paymentStatus === 'Unpaid' && t.cost > 0), [tasks]);
+    const unpaidMaterials = useMemo(() => materials.filter(m => m.paymentStatus === 'Unpaid' && m.total > 0), [materials]);
+
+    const consolidatedLabor = useMemo(() => {
+        const unpaid = labor.filter(l => l.paymentStatus === 'Unpaid' && l.total > 0);
+        const groupedByName: { [key: string]: Labor[] } = unpaid.reduce((acc, item) => {
+            if (!acc[item.name]) acc[item.name] = [];
+            acc[item.name].push(item);
+            return acc;
+        }, {});
+
+        const result: ConsolidatedLabor[] = Object.entries(groupedByName).map(([name, entries]) => {
+            if (entries.length === 0) return null;
+            const sortedEntries = entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            const totalAmount = sortedEntries.reduce((sum, entry) => sum + entry.total, 0);
+            const daysWorked = sortedEntries.length;
+            const startDate = sortedEntries[0]?.date;
+            const endDate = sortedEntries[sortedEntries.length - 1]?.date;
+            const dateRange = startDate === endDate ? startDate : `${startDate} to ${endDate}`;
+            const entryIds = sortedEntries.map(e => e.id);
+            return { name, totalAmount, daysWorked, dateRange, entryIds };
+        }).filter((item): item is ConsolidatedLabor => item !== null);
+
+        return result.sort((a, b) => b.totalAmount - a.totalAmount);
+    }, [labor]);
+
+    const totalUnpaid = useMemo(() => {
+        const taskTotal = unpaidTasks.reduce((sum, t) => sum + t.cost, 0);
+        const laborTotal = consolidatedLabor.reduce((sum, l) => sum + l.totalAmount, 0);
+        const materialTotal = unpaidMaterials.reduce((sum, m) => sum + m.total, 0);
+        return taskTotal + laborTotal + materialTotal;
+    }, [unpaidTasks, consolidatedLabor, unpaidMaterials]);
+
+    const handleToggleConsolidatedLabor = (entryIds: number[]) => {
+        entryIds.forEach(id => onToggleLaborPayment(id));
+    };
+
+    const hasUnpaidItems = unpaidTasks.length > 0 || consolidatedLabor.length > 0 || unpaidMaterials.length > 0;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Material">
-            <div className="space-y-4 text-sm">
+        <div className="p-4 sm:p-6 bg-gray-50">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
-                    <label className="block font-medium text-gray-700 mb-1">Receipt Link (Google Drive URL)</label>
-                    <input type="url" placeholder="https://drive.google.com/..." className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    <p className="mt-2 text-xs text-gray-500 flex items-start">
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span>Paste a shared Google Drive link to the photo/PDF of the receipt. This link will be stored in the item's notes (e.g., Receipt: https://drive.google.com/...).</span>
-                    </p>
-                     <p className="mt-2 text-xs text-gray-500">Then fill in the item details below</p>
+                    <p className="text-sm text-gray-500">Total Unpaid Balance</p>
+                    <p className="text-2xl font-bold text-red-600">₱{totalUnpaid.toLocaleString()}</p>
                 </div>
-                <div>
-                    <label className="block font-medium text-gray-700 mb-1">Item Name</label>
-                    <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Category</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-primary focus:border-primary text-gray-900">
-                            <option>Other</option>
-                            <option>Paint</option>
-                            <option>Tools</option>
-                            <option>Hardware</option>
-                        </select>
-                    </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Supplier</label>
-                        <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
-                </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Quantity</label>
-                        <input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value) || 0)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Unit Cost (₱)</label>
-                        <input type="number" value={unitCost} onChange={e => setUnitCost(Number(e.target.value) || 0)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Total Cost (₱)</label>
-                        <input type="number" value={totalCost} readOnly className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900" />
-                    </div>
-                </div>
-                 <div>
-                    <label className="block font-medium text-gray-700 mb-1">Notes</label>
-                    <textarea rows={3} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900"></textarea>
-                </div>
-                <div className="flex justify-end items-center space-x-3 pt-4 border-t mt-6">
-                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button onClick={onClose} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary-hover">Save</button>
-                </div>
+                <a
+                    href="https://docs.google.com/spreadsheets/create"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors duration-300 text-sm flex items-center justify-center w-full sm:w-auto"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Generate Google Invoice
+                </a>
             </div>
-        </Modal>
+
+            {!hasUnpaidItems ? (
+                <div className="text-center py-12">
+                    <p className="text-gray-500">No unpaid items to invoice.</p>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {consolidatedLabor.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Consolidated Unpaid Labor</h3>
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="text-left text-gray-500 bg-gray-50">
+                                            <th className="p-3 font-medium">Name</th>
+                                            <th className="p-3 font-medium">Date Range</th>
+                                            <th className="p-3 font-medium text-center">Days</th>
+                                            <th className="p-3 font-medium text-right">Total Due</th>
+                                            <th className="p-3 font-medium text-center">Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {consolidatedLabor.map(item => (
+                                            <tr key={item.name} className="border-b border-gray-200 last:border-b-0">
+                                                <td className="p-3 font-medium text-gray-800">{item.name}</td>
+                                                <td className="p-3 text-gray-600">{item.dateRange}</td>
+                                                <td className="p-3 text-gray-600 text-center">{item.daysWorked}</td>
+                                                <td className="p-3 text-gray-600 text-right">₱{item.totalAmount.toLocaleString()}</td>
+                                                <td className="p-3 text-center">
+                                                    <StatusBadge status="Unpaid" onClick={() => handleToggleConsolidatedLabor(item.entryIds)} />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                    {unpaidMaterials.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Unpaid Materials</h3>
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="text-left text-gray-500 bg-gray-50">
+                                            <th className="p-3 font-medium">Item</th>
+                                            <th className="p-3 font-medium">Supplier</th>
+                                            <th className="p-3 font-medium text-right">Total</th>
+                                            <th className="p-3 font-medium text-center">Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {unpaidMaterials.map(item => (
+                                            <tr key={`material-${item.id}`} className="border-b border-gray-200 last:border-b-0">
+                                                <td className="p-3 font-medium text-gray-800">
+                                                    <div className="flex items-center">
+                                                        <span>{item.item}</span>
+                                                        {item.imageUrl && (
+                                                            <button onClick={() => onToggleMaterialPayment(item.id)} className="ml-2 text-primary hover:text-primary-hover" aria-label="View Image">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="p-3 text-gray-600">{item.supplier}</td>
+                                                <td className="p-3 text-gray-600 text-right">₱{item.total.toLocaleString()}</td>
+                                                <td className="p-3 text-center"><StatusBadge status={item.paymentStatus} onClick={() => onToggleMaterialPayment(item.id)} /></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                     {unpaidTasks.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Unpaid Tasks</h3>
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="text-left text-gray-500 bg-gray-50">
+                                            <th className="p-3 font-medium">Task</th>
+                                            <th className="p-3 font-medium">Due Date</th>
+                                            <th className="p-3 font-medium text-right">Cost</th>
+                                            <th className="p-3 font-medium text-center">Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {unpaidTasks.map(task => (
+                                            <tr key={`task-${task.id}`} className="border-b border-gray-200 last:border-b-0">
+                                                <td className="p-3 font-medium text-gray-800">{task.name}</td>
+                                                <td className="p-3 text-gray-600">{task.dueDate}</td>
+                                                <td className="p-3 text-gray-600 text-right">₱{task.cost.toLocaleString()}</td>
+                                                <td className="p-3 text-center"><StatusBadge status={task.paymentStatus} onClick={() => onToggleTaskPayment(task.id)} /></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
     );
 };
 
-const AddTaskModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
+
+interface AddTaskModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAddTask: (taskData: Omit<Task, 'id' | 'cost'>) => void;
+}
+
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onAddTask }) => {
+    const [name, setName] = useState('');
+    const [status, setStatus] = useState<TaskStatus>('Backlog');
+    const [type, setType] = useState('');
+    const [dueDate, setDueDate] = useState('');
+    const [notes, setNotes] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
+
+    const handleSubmit = () => {
+        if (!name || !dueDate) {
+            alert('Task name and due date are required.');
+            return;
+        }
+        onAddTask({ name, status, type, dueDate, notes, imageUrl, paymentStatus: 'Unpaid' });
+        // Reset and close
+        setName('');
+        setStatus('Backlog');
+        setType('');
+        setDueDate('');
+        setNotes('');
+        setImageUrl('');
+        onClose();
+    };
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Task">
+        <Modal isOpen={isOpen} onClose={onClose} title="Add New Task">
             <div className="space-y-4 text-sm">
                 <div>
                     <label className="block font-medium text-gray-700 mb-1">Task Name</label>
-                    <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Status</label>
+                        <select value={status} onChange={e => setStatus(e.target.value as TaskStatus)} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-primary focus:border-primary text-gray-900">
+                            <option>Backlog</option>
+                            <option>In Progress</option>
+                            <option>Done</option>
+                        </select>
+                    </div>
+                    <div>
                         <label className="block font-medium text-gray-700 mb-1">Due Date</label>
-                        <input type="date" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                     </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Cost (₱)</label>
-                        <input type="number" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
+                </div>
+                <div>
+                     <label className="block font-medium text-gray-700 mb-1">Type/Category</label>
+                    <input type="text" value={type} onChange={e => setType(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                <div>
+                    <label className="block font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                 </div>
                 <div className="flex justify-end items-center space-x-3 pt-4 border-t mt-6">
-                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button onClick={onClose} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary-hover">Save</button>
+                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button onClick={handleSubmit} className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover">Add Task</button>
                 </div>
             </div>
         </Modal>
-    );
+    )
 };
 
-const AddLaborModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
+interface AddLaborModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAddLabor: (laborData: Omit<Labor, 'id'>) => void;
+}
+
+const AddLaborModal: React.FC<AddLaborModalProps> = ({ isOpen, onClose, onAddLabor }) => {
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [date, setDate] = useState('');
+    const [hours, setHours] = useState(0);
+    const [total, setTotal] = useState(0);
+
+    const handleSubmit = () => {
+        if (!name || !date || total <= 0) {
+            alert('Name, date, and a valid total are required.');
+            return;
+        }
+        onAddLabor({ name, description, date, hours, total, paymentStatus: 'Unpaid' });
+        // Reset and close
+        setName('');
+        setDescription('');
+        setDate('');
+        setHours(0);
+        setTotal(0);
+        onClose();
+    };
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Labor">
+        <Modal isOpen={isOpen} onClose={onClose} title="Add Labor Entry">
             <div className="space-y-4 text-sm">
-                <div>
-                    <label className="block font-medium text-gray-700 mb-1">Name</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-primary focus:border-primary text-gray-900">
-                        <option>JR</option>
-                        <option>Leo</option>
-                        <option>Jery</option>
-                        <option>Ramil</option>
-                        <option>Other</option>
-                    </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    </div>
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    </div>
                 </div>
                 <div>
                     <label className="block font-medium text-gray-700 mb-1">Description</label>
-                    <input type="text" defaultValue="General Labor" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    <input type="text" value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Date</label>
-                        <input type="date" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Hours Worked</label>
+                        <input type="number" value={hours} onChange={e => setHours(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                     </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Hours</label>
-                        <input type="number" defaultValue="8" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Total (₱)</label>
-                        <input type="number" defaultValue="625" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Total Pay (₱)</label>
+                        <input type="number" value={total} onChange={e => setTotal(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                     </div>
                 </div>
                 <div className="flex justify-end items-center space-x-3 pt-4 border-t mt-6">
-                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button onClick={onClose} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary-hover">Save</button>
+                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button onClick={handleSubmit} className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover">Add Labor</button>
                 </div>
             </div>
         </Modal>
     );
 };
 
-const AddInvoiceModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
+interface AddMaterialModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAddMaterial: (materialData: Omit<Material, 'id'>) => void;
+}
+
+const AddMaterialModal: React.FC<AddMaterialModalProps> = ({ isOpen, onClose, onAddMaterial }) => {
+    const [item, setItem] = useState('');
+    const [supplier, setSupplier] = useState('');
+    const [total, setTotal] = useState(0);
+    const [notes, setNotes] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
+
+    const handleSubmit = () => {
+        if (!item || total <= 0) {
+            alert('Item name and a valid total are required.');
+            return;
+        }
+        onAddMaterial({ item, supplier, total, paymentStatus: 'Unpaid', notes, imageUrl });
+        // Reset and close
+        setItem('');
+        setSupplier('');
+        setTotal(0);
+        setNotes('');
+        setImageUrl('');
+        onClose();
+    };
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Invoice">
-             <div className="space-y-4 text-sm">
-                <div>
-                    <label className="block font-medium text-gray-700 mb-1">Invoice Link (Google Drive URL)</label>
-                    <input type="url" placeholder="https://drive.google.com/..." className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                     <p className="mt-2 text-xs text-gray-500">Paste a shared link to the invoice PDF/photo.</p>
-                </div>
+        <Modal isOpen={isOpen} onClose={onClose} title="Add Material Entry">
+            <div className="space-y-4 text-sm">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Invoice Number</label>
-                        <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Item Name</label>
+                        <input type="text" value={item} onChange={e => setItem(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                     </div>
-                     <div>
+                    <div>
                         <label className="block font-medium text-gray-700 mb-1">Supplier</label>
-                        <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                        <input type="text" value={supplier} onChange={e => setSupplier(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                     </div>
                 </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Due Date</label>
-                        <input type="date" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
-                     <div>
-                        <label className="block font-medium text-gray-700 mb-1">Total (₱)</label>
-                        <input type="number" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
-                    </div>
+                <div>
+                    <label className="block font-medium text-gray-700 mb-1">Total Cost (₱)</label>
+                    <input type="number" value={total} onChange={e => setTotal(Number(e.target.value))} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                 <div>
+                    <label className="block font-medium text-gray-700 mb-1">Google Images URL (Optional)</label>
+                    <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                <div>
+                    <label className="block font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
                 </div>
                 <div className="flex justify-end items-center space-x-3 pt-4 border-t mt-6">
-                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button onClick={onClose} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary-hover">Save</button>
+                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button onClick={handleSubmit} className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover">Add Material</button>
                 </div>
             </div>
         </Modal>
     );
 };
+
+
+interface EditLaborModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onUpdate: (item: Labor) => void;
+    laborItem: Labor | null;
+}
+
+const EditLaborModal: React.FC<EditLaborModalProps> = ({ isOpen, onClose, onUpdate, laborItem }) => {
+    const [item, setItem] = useState<Labor | null>(laborItem);
+    
+    useEffect(() => {
+        setItem(laborItem);
+    }, [laborItem]);
+
+    if (!isOpen || !item) return null;
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value, type } = e.target;
+        setItem(prev => prev ? { ...prev, [name]: type === 'number' ? parseFloat(value) || 0 : value } : null);
+    };
+
+    const handleSubmit = () => {
+        if(item) {
+            onUpdate(item);
+        }
+        onClose();
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={`Edit Labor: ${item.name}`}>
+            <div className="space-y-4 text-sm">
+                <div>
+                    <label className="block font-medium text-gray-700 mb-1">Date</label>
+                    <input type="date" name="date" value={item.date} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                         <label className="block font-medium text-gray-700 mb-1">Hours</label>
+                        <input type="number" name="hours" value={item.hours} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    </div>
+                    <div>
+                         <label className="block font-medium text-gray-700 mb-1">Total Pay (₱)</label>
+                        <input type="number" name="total" value={item.total} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    </div>
+                </div>
+                 <div className="flex justify-end items-center space-x-3 pt-4 border-t mt-6">
+                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button onClick={handleSubmit} className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover">Save Changes</button>
+                </div>
+            </div>
+        </Modal>
+    );
+};
+
+interface EditMaterialModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onUpdate: (item: Material) => void;
+    materialItem: Material | null;
+}
+
+const EditMaterialModal: React.FC<EditMaterialModalProps> = ({ isOpen, onClose, onUpdate, materialItem }) => {
+    const [item, setItem] = useState<Material | null>(materialItem);
+    
+    useEffect(() => {
+        setItem(materialItem);
+    }, [materialItem]);
+
+    if (!isOpen || !item) return null;
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        const isNumber = e.target.type === 'number';
+        setItem(prev => prev ? { ...prev, [name]: isNumber ? parseFloat(value) || 0 : value } : null);
+    };
+
+    const handleSubmit = () => {
+        if(item) {
+            onUpdate(item);
+        }
+        onClose();
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title={`Edit Material: ${item.item}`}>
+             <div className="space-y-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Item Name</label>
+                        <input type="text" name="item" value={item.item} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    </div>
+                    <div>
+                        <label className="block font-medium text-gray-700 mb-1">Supplier</label>
+                        <input type="text" name="supplier" value={item.supplier} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                    </div>
+                </div>
+                <div>
+                    <label className="block font-medium text-gray-700 mb-1">Total Cost (₱)</label>
+                    <input type="number" name="total" value={item.total} onChange={handleChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                 <div>
+                    <label className="block font-medium text-gray-700 mb-1">Google Images URL (Optional)</label>
+                    <input type="url" name="imageUrl" value={item.imageUrl || ''} onChange={handleChange} placeholder="https://..." className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                <div>
+                    <label className="block font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" value={item.notes} onChange={handleChange} rows={3} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-gray-900" />
+                </div>
+                <div className="flex justify-end items-center space-x-3 pt-4 border-t mt-6">
+                    <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button onClick={handleSubmit} className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-hover">Save Changes</button>
+                </div>
+            </div>
+        </Modal>
+    );
+};
+
+const ImagePreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; imageUrl: string | null; }> = ({ isOpen, onClose, imageUrl }) => {
+    if (!imageUrl) return null;
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Image Preview" size="2xl">
+            <div className="flex justify-center items-center">
+                <img src={imageUrl} alt="Material Preview" className="max-w-full max-h-[80vh] rounded-lg object-contain" />
+            </div>
+        </Modal>
+    );
+};
+
+type ViewType = 'Tasks' | 'Labor' | 'Materials' | 'Invoices';
 
 interface ProjectViewProps {
     projectName: string;
@@ -658,86 +961,142 @@ interface ProjectViewProps {
     labor: Labor[];
     materials: Material[];
     invoices: Invoice[];
+    onToggleTaskStatus: (id: number) => void;
     onToggleTaskPayment: (id: number) => void;
-    onToggleTaskCompletion: (id: number) => void;
+    onAddTask: (taskData: Omit<Task, 'id' | 'cost'>) => void;
+    onDeleteTask: (id: number) => void;
     onToggleLaborPayment: (id: number) => void;
+    onUpdateLabor: (item: Labor) => void;
+    onDeleteLabor: (id: number) => void;
+    onAddLabor: (laborData: Omit<Labor, 'id'>) => void;
     onToggleMaterialPayment: (id: number) => void;
-    onToggleInvoicePayment: (id: number) => void;
+    onDeleteMaterial: (id: number) => void;
+    onAddMaterial: (materialData: Omit<Material, 'id'>) => void;
+    onUpdateMaterial: (item: Material) => void;
 }
 
 export const ProjectView: React.FC<ProjectViewProps> = ({
-    projectName,
     tasks,
     labor,
     materials,
     invoices,
+    onToggleTaskStatus,
     onToggleTaskPayment,
-    onToggleTaskCompletion,
+    onAddTask,
+    onDeleteTask,
     onToggleLaborPayment,
+    onUpdateLabor,
+    onDeleteLabor,
+    onAddLabor,
     onToggleMaterialPayment,
-    onToggleInvoicePayment,
+    onDeleteMaterial,
+    onAddMaterial,
+    onUpdateMaterial,
 }) => {
-    const [activeTab, setActiveTab] = useState('Tasks');
+    const [activeView, setActiveView] = useState<ViewType>('Invoices');
     const [isAddTaskModalOpen, setAddTaskModalOpen] = useState(false);
     const [isAddLaborModalOpen, setAddLaborModalOpen] = useState(false);
     const [isAddMaterialModalOpen, setAddMaterialModalOpen] = useState(false);
-    const [isAddInvoiceModalOpen, setAddInvoiceModalOpen] = useState(false);
+    const [editingLabor, setEditingLabor] = useState<Labor | null>(null);
+    const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+    const [viewingImageUrl, setViewingImageUrl] = useState<string | null>(null);
 
-    const tabs = ['Tasks', 'Labor', 'Materials', 'Invoices'];
+    const unpaidItemsCount = useMemo(() => {
+        const unpaidTasks = tasks.filter(t => t.paymentStatus === 'Unpaid' && t.cost > 0).length;
+        const unpaidLabor = labor.filter(l => l.paymentStatus === 'Unpaid' && l.total > 0).length;
+        const unpaidMaterials = materials.filter(m => m.paymentStatus === 'Unpaid' && m.total > 0).length;
+        return unpaidTasks + unpaidLabor + unpaidMaterials;
+    }, [tasks, labor, materials]);
 
-    const tabContent = useMemo(() => {
-        switch (activeTab) {
-            case 'Tasks':
-                return <TasksView tasks={tasks} onTogglePayment={onToggleTaskPayment} onToggleCompletion={onToggleTaskCompletion} />;
-            case 'Labor':
-                return <LaborView labor={labor} onTogglePayment={onToggleLaborPayment} />;
-            case 'Materials':
-                return <MaterialsView materials={materials} onTogglePayment={onToggleMaterialPayment} />;
-            case 'Invoices':
-                return <InvoicesView invoices={invoices} onTogglePayment={onToggleInvoicePayment} />;
-            default:
-                return null;
-        }
-    }, [activeTab, tasks, labor, materials, invoices, onToggleTaskPayment, onToggleTaskCompletion, onToggleLaborPayment, onToggleMaterialPayment, onToggleInvoicePayment]);
-    
-    const openAddModal = () => {
-        switch (activeTab) {
-            case 'Tasks': setAddTaskModalOpen(true); break;
-            case 'Labor': setAddLaborModalOpen(true); break;
-            case 'Materials': setAddMaterialModalOpen(true); break;
-            case 'Invoices': setAddInvoiceModalOpen(true); break;
-        }
-    };
+    const tabs: { name: ViewType; count: number }[] = [
+        { name: 'Tasks', count: tasks.length },
+        { name: 'Labor', count: labor.length },
+        { name: 'Materials', count: materials.length },
+        { name: 'Invoices', count: unpaidItemsCount },
+    ];
 
     return (
         <main className="flex-1 overflow-y-auto bg-gray-100">
             <div className="p-4 sm:p-6">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border-b gap-4">
-                        <nav className="flex space-x-1 overflow-x-auto -mx-4 px-4 sm:overflow-visible sm:mx-0 sm:px-0">
-                            {tabs.map(tab => (
+                        <div className="flex border-b sm:border-b-0 -mx-4 px-4 sm:m-0 sm:p-0 overflow-x-auto">
+                             {tabs.map(tab => (
                                 <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md flex-shrink-0 ${activeTab === tab ? 'bg-blue-50 text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
+                                    key={tab.name}
+                                    onClick={() => setActiveView(tab.name)}
+                                    className={`px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeView === tab.name ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    {tab}
+                                    {tab.name} <span className="ml-1.5 bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">{tab.count}</span>
                                 </button>
                             ))}
-                        </nav>
-                        <button onClick={openAddModal} className="bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors duration-300 text-sm flex items-center justify-center sm:w-auto w-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                            Add {activeTab.slice(0, -1)}
-                        </button>
+                        </div>
+                        {activeView === 'Tasks' && (
+                            <button onClick={() => setAddTaskModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors duration-300 text-sm flex items-center justify-center sm:w-auto w-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                Add Task
+                            </button>
+                        )}
+                        {activeView === 'Labor' && (
+                            <button onClick={() => setAddLaborModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors duration-300 text-sm flex items-center justify-center sm:w-auto w-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                Add Labor
+                            </button>
+                        )}
+                        {activeView === 'Materials' && (
+                            <button onClick={() => setAddMaterialModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors duration-300 text-sm flex items-center justify-center sm:w-auto w-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                Add Material
+                            </button>
+                        )}
                     </div>
-                    {tabContent}
+                    <div>
+                        {activeView === 'Tasks' && <TasksView tasks={tasks} onTogglePayment={onToggleTaskPayment} onDelete={onDeleteTask} onToggleStatus={onToggleTaskStatus} />}
+                        {activeView === 'Labor' && <LaborView labor={labor} onTogglePayment={onToggleLaborPayment} onEdit={setEditingLabor} onDelete={onDeleteLabor} />}
+                        {activeView === 'Materials' && <MaterialsView materials={materials} onTogglePayment={onToggleMaterialPayment} onDelete={onDeleteMaterial} onEdit={setEditingMaterial} onViewImage={setViewingImageUrl} />}
+                        {activeView === 'Invoices' && <InvoicesView 
+                                tasks={tasks}
+                                labor={labor}
+                                materials={materials}
+                                onToggleTaskPayment={onToggleTaskPayment}
+                                onToggleLaborPayment={onToggleLaborPayment}
+                                onToggleMaterialPayment={onToggleMaterialPayment}
+                            />}
+                    </div>
                 </div>
             </div>
-            
-            <AddTaskModal isOpen={isAddTaskModalOpen} onClose={() => setAddTaskModalOpen(false)} />
-            <AddLaborModal isOpen={isAddLaborModalOpen} onClose={() => setAddLaborModalOpen(false)} />
-            <AddMaterialModal isOpen={isAddMaterialModalOpen} onClose={() => setAddMaterialModalOpen(false)} />
-            <AddInvoiceModal isOpen={isAddInvoiceModalOpen} onClose={() => setAddInvoiceModalOpen(false)} />
+            <AddTaskModal
+                isOpen={isAddTaskModalOpen}
+                onClose={() => setAddTaskModalOpen(false)}
+                onAddTask={onAddTask}
+            />
+            <AddLaborModal
+                isOpen={isAddLaborModalOpen}
+                onClose={() => setAddLaborModalOpen(false)}
+                onAddLabor={onAddLabor}
+            />
+            <AddMaterialModal
+                isOpen={isAddMaterialModalOpen}
+                onClose={() => setAddMaterialModalOpen(false)}
+                onAddMaterial={onAddMaterial}
+            />
+            <EditLaborModal
+                isOpen={!!editingLabor}
+                onClose={() => setEditingLabor(null)}
+                laborItem={editingLabor}
+                onUpdate={onUpdateLabor}
+            />
+            <EditMaterialModal
+                isOpen={!!editingMaterial}
+                onClose={() => setEditingMaterial(null)}
+                materialItem={editingMaterial}
+                onUpdate={onUpdateMaterial}
+            />
+            <ImagePreviewModal
+                isOpen={!!viewingImageUrl}
+                onClose={() => setViewingImageUrl(null)}
+                imageUrl={viewingImageUrl}
+            />
         </main>
     );
 };

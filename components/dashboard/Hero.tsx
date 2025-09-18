@@ -11,7 +11,7 @@ const Hero: React.FC = () => {
                     The Future of Real World Assets in Palawan
                 </h1>
                 <p className="text-lg text-gray-500 mb-10 max-w-2xl mx-auto">
-                    villas + farming + hardware + digital integration
+                    Villas + Sustainable Farming + Smart Hardware + Digital Integration
                 </p>
                 <div className="flex justify-center space-x-4">
                     <button className="bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-8 rounded-lg shadow-md transition-colors duration-300">

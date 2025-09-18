@@ -1,6 +1,6 @@
 
 import React from 'react';
-import UiIcon from './UiIcon';
+import SocialLinks from './SocialLinks';
 
 const Footer: React.FC = () => {
     return (
@@ -26,9 +26,10 @@ const Footer: React.FC = () => {
                         <h5 className="font-bold text-gray-800">Cleopatra SIRV × Binga Beach Brothers</h5>
                         <p className="mt-2">A balanced alliance delivering real-world assets in Palawan: eco-villas & resort ops, farm-to-table agriculture, hardware & construction supply, and compliant structures with transparent reporting.</p>
                         <form className="mt-4 flex flex-col sm:flex-row gap-2">
-                            <input type="email" placeholder="Enter your email" className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                            <input type="email" placeholder="Enter your email" className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-gray-900" />
                             <button type="submit" className="bg-white text-gray-700 px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 font-medium whitespace-nowrap">Join our quarterly update</button>
                         </form>
+                        <SocialLinks className="mt-6" />
                     </div>
 
                     <nav aria-labelledby="footer-nav-navigate">

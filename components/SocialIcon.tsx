@@ -1,6 +1,6 @@
 import * as React from "react";
 
-export type SocialName = "youtube" | "instagram" | "facebook" | "x" | "github" | "linkedin";
+export type SocialName = "youtube" | "instagram" | "facebook" | "x" | "github";
 
 type Props = {
   name: SocialName;
@@ -49,12 +49,5 @@ const ICON_PATHS: Record<SocialName, React.ReactNode> = {
   ),
   github: (
     <path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.9.7-3.5-1.3-3.5-1.3-.5-1.2-1.1-1.6-1.1-1.6-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .9.1-.7.4-1.1.8-1.4-2.3-.3-4.7-1.1-4.7-5A4 4 0 0 1 7.6 7c-.1-.3-.4-1.3.1-2.6 0 0 .9-.3 2.7 1a9.3 9.3 0 0 1 4.9 0c1.8-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6a4 4 0 0 1 1.1 2.8c0 3.9-2.4 4.7-4.7 5 .4.3.8 1 .8 2.1v3.1c0 .3.2.6.7.5A10 10 0 0 0 12 2z" fill="currentColor" />
-  ),
-  linkedin: (
-    <>
-      <rect x="3" y="3" width="18" height="18" rx="2" {...common} />
-      <circle cx="8" cy="8.5" r="1.2" fill="currentColor" />
-      <path d="M7 11v6m5-6v6m0-3a3 3 0 0 1 6 0v3" {...common} />
-    </>
   ),
 };

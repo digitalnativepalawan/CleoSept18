@@ -7,7 +7,6 @@ const LINKS = [
   { name: "facebook",  href: "https://www.facebook.com/bingabeachresort",          title: "Facebook"  },
   { name: "x",         href: "https://x.com/bingabeach",                            title: "X"         },
   { name: "github",    href: "https://github.com/digitalnativepalawan/cleo",        title: "GitHub"    },
-  { name: "linkedin",  href: "https://www.linkedin.com/company/binga-beach-resort/",title: "LinkedIn"  },
 ] as const;
 
 export default function SocialLinks({ className = "" }: { className?: string }) {
