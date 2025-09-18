@@ -67,13 +67,13 @@ const Funding: React.FC = () => {
                 <Card>
                     <h3 className="font-semibold text-lg mb-6 text-center lg:text-left">Investment Tiers</h3>
                     <div className="space-y-8">
-                        <InvestmentTier icon={<SeedlingIcon />} title="Pilot Investor" amount="₱2.5-5.0M">
+                        <InvestmentTier icon={<SeedlingIcon />} title="Pilot Investor" amount={"₱2.5-5.0M"}>
                             Structured as a Convertible Note or SAFE agreement, offering premium terms at the next funding stage.
                         </InvestmentTier>
-                        <InvestmentTier icon={<HomeModernIcon />} title="SIRV Villa Owner" amount="₱12.5M+">
+                        <InvestmentTier icon={<HomeModernIcon />} title="SIRV Villa Owner" amount={"₱12.5M+"}>
                             Acquire a titled eco-villa asset linked to the Special Investor's Resident Visa (SIRV) program.
                         </InvestmentTier>
-                        <InvestmentTier icon={<UserGroupIcon />} title="Equity Partner" amount="₱25.0M+">
+                        <InvestmentTier icon={<UserGroupIcon />} title="Equity Partner" amount={"₱25.0M+"}>
                             Direct equity stake in the holding company, including profit sharing, and a potential board seat.
                         </InvestmentTier>
                     </div>

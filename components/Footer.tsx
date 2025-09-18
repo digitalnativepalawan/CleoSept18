@@ -72,13 +72,7 @@ const Footer: React.FC = () => {
                         </address>
                         <div className="mt-4">
                             <button className="w-full text-left flex justify-between items-center p-2 border rounded-md">
-                                <span>English</span>
-                                <span className="text-gray-400 text-xs">▼</span>
-                            </button>
-                        </div>
-                        <div className="mt-2">
-                            <button className="w-full text-left flex justify-between items-center p-2 border rounded-md">
-                                <span>PHP ₱</span>
+                                <span>PHP (₱)</span>
                                 <span className="text-gray-400 text-xs">▼</span>
                             </button>
                         </div>

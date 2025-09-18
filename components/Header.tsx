@@ -40,12 +40,9 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onPortalCl
                         <button onClick={onPortalClick} className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
                             <span className="font-medium text-gray-800">Portal</span>
                         </button>
-                        <a href="#" className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
+                        <a href="https://github.com/digitalnativepalawan/CleoSept18" target="_blank" rel="noopener noreferrer" className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
                             <span className="font-medium text-gray-800">GitHub</span>
                         </a>
-                        <button className="flex items-center px-3 py-1.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors">
-                            <span className="font-medium text-gray-800">PHP</span>
-                        </button>
                     </nav>
                     
                     {/* Right-aligned controls for desktop */}
@@ -109,8 +106,7 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick, onSignUpClick, onPortalCl
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                         <button onClick={(e) => { e.preventDefault(); onPortalClick(); setMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Portal</button>
                         <button onClick={(e) => { e.preventDefault(); onBlogClick(); setMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Blog</button>
-                        <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">GitHub</a>
-                        <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">PHP</a>
+                        <a href="https://github.com/digitalnativepalawan/CleoSept18" target="_blank" rel="noopener noreferrer" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">GitHub</a>
                     </div>
                     <div className="pt-4 pb-3 border-t border-gray-200">
                         <div className="px-5">

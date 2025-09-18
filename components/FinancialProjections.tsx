@@ -14,7 +14,7 @@ const KPICard: React.FC<{ value: React.ReactNode; label: string; sublabel: strin
     </Card>
 );
 
-const revenueData = [
+const initialRevenueData = [
     { year: 2026, hospitality: "₱17.0M", hardware: "₱8.0M", farming: "₱1.5M", other: "₱1.0M", total: "₱27.5M" },
     { year: 2027, hospitality: "₱54.0M", hardware: "₱20.0M", farming: "₱4.0M", other: "₱2.0M", total: "₱80.0M" },
     { year: 2028, hospitality: "₱98.0M", hardware: "₱37.0M", farming: "₱8.0M", other: "₱5.5M", total: "₱148.5M" },
@@ -22,7 +22,7 @@ const revenueData = [
     { year: 2030, hospitality: "₱145.0M", hardware: "₱55.0M", farming: "₱12.0M", other: "₱8.0M", total: "₱220.0M" },
 ];
 
-const expansionData = [
+const initialExpansionData = [
     { year: 2026, cumulative: 5, new: 5, stabilized: "60%", adr: "₱12.0k" },
     { year: 2027, cumulative: 20, new: 15, stabilized: "66%", adr: "₱12.6k" },
     { year: 2028, cumulative: 35, new: 15, stabilized: "70%", adr: "₱13.2k" },
@@ -35,7 +35,7 @@ const FinancialProjections: React.FC = () => {
         <Section title="Financial Projections" subtitle="Scalable, resilient growth model with strong underlying assets.">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 grid-gap-md">
                 <KPICard value="70%" label="Target Occupancy" sublabel="Year 3 Average" />
-                <KPICard value="₱12.0k" label="Average Daily Rate" sublabel="Peak Season Estimate" />
+                <KPICard value={"₱12.0k"} label="Average Daily Rate" sublabel="Peak Season Estimate" />
                 <KPICard value="30-35%" label="EBITDA Margin" sublabel="Projected at Maturity" />
                 <KPICard 
                     value="18-20%" 
@@ -60,7 +60,7 @@ const FinancialProjections: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {revenueData.map((row) => (
+                            {initialRevenueData.map((row) => (
                                 <tr key={row.year} className="border-t border-gray-200">
                                     <td className="p-2 md:p-3 text-gray-700">{row.year}</td>
                                     <td className="p-2 md:p-3 text-gray-700 text-right">{row.hospitality}</td>
@@ -91,7 +91,7 @@ const FinancialProjections: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {expansionData.map((row) => (
+                            {initialExpansionData.map((row) => (
                                 <tr key={row.year} className="border-t border-gray-200">
                                     <td className="p-2 md:p-3 text-gray-700">{row.year}</td>
                                     <td className="p-2 md:p-3 text-gray-700 text-right">{row.cumulative}</td>
@@ -104,7 +104,7 @@ const FinancialProjections: React.FC = () => {
                     </table>
                     <div className="mt-4 pt-4 border-t flex justify-between items-center text-sm">
                        <span className="bg-blue-100/70 text-blue-800 font-medium px-3 py-1.5 rounded-lg">Unit Economics</span>
-                       <span className="text-green-600 font-bold text-right">EBITDA/villa ≈ ₱10.0M at maturity</span>
+                       <span className="text-green-600 font-bold text-right">{"EBITDA/villa ≈ ₱10.0M at maturity"}</span>
                     </div>
                 </Card>
             </div>
