@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from './auth/AuthContext';
-import { usePinGate } from '../../hooks/usePinGate';
+import { usePinGate } from '../hooks/usePinGate';
 
 const NavItem: React.FC<{ label: string, isActive: boolean, onClick: () => void }> = ({ label, onClick, isActive }) => {
     const activeClasses = 'bg-blue-50 text-primary font-semibold';
