@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Investor Portal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; line-height: 1.45; color:#111 }
+    h1 { margin-bottom: 6px }
+    .note { color:#666; font-size:14px; margin-bottom:16px }
+    .tabs { display:flex; gap:8px; margin:16px 0 }
+    .tab { padding:8px 12px; border:1px solid #ccc; background:#f9f9f9; cursor:pointer; border-radius:6px }
+    .tab.active { background:#e0e7ff; font-weight:600 }
+    .panel { display:none }
+    .panel.active { display:block }
+    .wrap { overflow-x:auto; border:1px solid #ddd; border-radius:6px; margin-top:8px }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom:1px solid #ddd; padding:8px; text-align:left; white-space:nowrap }
+    th { background:#f3f4f6 }
+    .admin { margin-top:24px; padding:16px; border:1px dashed #ccc; border-radius:6px; background:#fffef7 }
+    .admin small { color:#666 }
+    .hide { display:none }
+    input[type="password"]{ padding:6px; border:1px solid #ccc; border-radius:6px; width:200px }
+    button { padding:6px 12px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; cursor:pointer }
+  </style>
+</head>
+<body>
+  <h1>Investor Portal</h1>
+  <p class="note">This page reads CSV files from <code>data/current/</code>. Update the CSVs in GitHub and refresh this page.</p>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="tasks">Tasks</button>
+    <button class="tab" data-tab="labor">Labor</button>
+    <button class="tab" data-tab="materials">Materials</button>
+  </div>
+
+  <!-- Panels -->
+  <section id="tasks" class="panel active">
+    <p><a id="dlTasks" href="#">Download tasks.csv</a></p>
+    <div class="wrap"><table id="tasksTable"></table></div>
+  </section>
+
+  <section id="labor" class="panel">
+    <p><a id="
