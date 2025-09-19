@@ -5,41 +5,280 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Investor Portal</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 24px; line-height: 1.45; color:#111 }
-    h1 { margin-bottom: 6px }
+    body { font-family: system-ui, sans-serif; margin:24px; line-height:1.45; color:#111 }
+    h1 { margin-bottom:6px }
     .note { color:#666; font-size:14px; margin-bottom:16px }
     .tabs { display:flex; gap:8px; margin:16px 0 }
     .tab { padding:8px 12px; border:1px solid #ccc; background:#f9f9f9; cursor:pointer; border-radius:6px }
     .tab.active { background:#e0e7ff; font-weight:600 }
     .panel { display:none }
     .panel.active { display:block }
-    .wrap { overflow-x:auto; border:1px solid #ddd; border-radius:6px; margin-top:8px }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom:1px solid #ddd; padding:8px; text-align:left; white-space:nowrap }
+    .wrap { overflow-x:auto; border:1px solid #ddd; border-radius:6px; margin-top:8px; background:#fff }
+    table { width:100%; border-collapse:collapse }
+    th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; white-space:nowrap; vertical-align:top }
     th { background:#f3f4f6 }
+    img.thumb { width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid #eee }
     .admin { margin-top:24px; padding:16px; border:1px dashed #ccc; border-radius:6px; background:#fffef7 }
     .admin small { color:#666 }
     .hide { display:none }
     input[type="password"]{ padding:6px; border:1px solid #ccc; border-radius:6px; width:200px }
     button { padding:6px 12px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; cursor:pointer }
+    .stat { margin:12px 0; font-weight:600 }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#e5fbe5; color:#065f46; font-size:12px }
+    .pill.red { background:#fde7e7; color:#7f1d1d }
+    .card { border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fff }
   </style>
 </head>
 <body>
   <h1>Investor Portal</h1>
-  <p class="note">This page reads CSV files from <code>data/current/</code>. Update the CSVs in GitHub and refresh this page.</p>
+  <p class="note">Reads CSV files from <code>data/current/</code>. Update the CSVs in GitHub and refresh.</p>
 
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-tab="tasks">Tasks</button>
     <button class="tab" data-tab="labor">Labor</button>
     <button class="tab" data-tab="materials">Materials</button>
+    <button class="tab" data-tab="invoices">Invoices</button>
   </div>
 
-  <!-- Panels -->
+  <!-- TASKS -->
   <section id="tasks" class="panel active">
     <p><a id="dlTasks" href="#">Download tasks.csv</a></p>
     <div class="wrap"><table id="tasksTable"></table></div>
   </section>
 
+  <!-- LABOR -->
   <section id="labor" class="panel">
-    <p><a id="
+    <p><a id="dlLabor" href="#">Download labor.csv</a></p>
+    <div class="wrap"><table id="laborTable"></table></div>
+    <p class="note" id="laborTotal"></p>
+  </section>
+
+  <!-- MATERIALS -->
+  <section id="materials" class="panel">
+    <p><a id="dlMaterials" href="#">Download materials.csv</a></p>
+    <div class="wrap"><table id="materialsTable"></table></div>
+    <p class="note" id="materialsTotal"></p>
+  </section>
+
+  <!-- INVOICES (auto from Unpaid) -->
+  <section id="invoices" class="panel">
+    <div class="card">
+      <div class="stat">Total Unpaid Balance: <span id="unpaidSum" class="pill red">₱0</span></div>
+      <p class="note">Built automatically from rows with <strong>Status = Unpaid</strong> in Labor and Materials.</p>
+    </div>
+    <h3>Consolidated Unpaid Labor</h3>
+    <div class="wrap"><table id="unpaidLaborTable"></table></div>
+    <h3 style="margin-top:18px">Unpaid Materials</h3>
+    <div class="wrap"><table id="unpaidMaterialsTable"></table></div>
+  </section>
+
+  <!-- Admin (Edit links) -->
+  <div class="admin" id="adminBox">
+    <strong>Admin: Edit files on GitHub</strong>
+    <div id="adminLocked">
+      <p class="note">Enter passphrase to show edit buttons:</p>
+      <input id="pass" type="password" placeholder="passphrase">
+      <button id="unlock">Unlock</button>
+      <div><small>Tip: change the passphrase in the code below.</small></div>
+    </div>
+    <div id="adminLinks" class="hide">
+      <p><strong>CSV files</strong></p>
+      <ul>
+        <li><a id="editTasks" target="_blank" rel="noopener">Edit tasks.csv</a></li>
+        <li><a id="editLabor" target="_blank" rel="noopener">Edit labor.csv</a></li>
+        <li><a id="editMaterials" target="_blank" rel="noopener">Edit materials.csv</a></li>
+      </ul>
+    </div>
+  </div>
+
+<script>
+  /*** SETTINGS — customized for you ***/
+  const OWNER  = 'digitalnativepalawan';
+  const REPO   = 'CleoSept18';
+  const BRANCH = 'main';
+  const BASE   = '/CleoSept18';       // project page path
+  const ADMIN_PASSPHRASE = 'palawan'; // change if you want
+
+  /*** Paths ***/
+  const paths = {
+    tasks:     BASE + '/data/current/tasks.csv',
+    labor:     BASE + '/data/current/labor.csv',
+    materials: BASE + '/data/current/materials.csv'
+  };
+
+  // Download links
+  document.getElementById('dlTasks').href     = paths.tasks;
+  document.getElementById('dlLabor').href     = paths.labor;
+  document.getElementById('dlMaterials').href = paths.materials;
+
+  // Admin edit links
+  const gh = (p) => `https://github.com/${OWNER}/${REPO}/edit/${BRANCH}/${p}`;
+  document.getElementById('editTasks').href     = gh('data/current/tasks.csv');
+  document.getElementById('editLabor').href     = gh('data/current/labor.csv');
+  document.getElementById('editMaterials').href = gh('data/current/materials.csv');
+
+  // Unlock admin
+  document.getElementById('unlock').addEventListener('click', () => {
+    const ok = document.getElementById('pass').value === ADMIN_PASSPHRASE;
+    if (ok) { 
+      document.getElementById('adminLocked').classList.add('hide');
+      document.getElementById('adminLinks').classList.remove('hide');
+    } else alert('Wrong passphrase');
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // --- Helpers ---
+  // CSV -> rows[]
+  async function csvToRows(url) {
+    const res = await fetch(url + '?v=' + Date.now());
+    if (!res.ok) return [];
+    const text = (await res.text()).trim();
+    if (!text) return [];
+    return text.split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+  }
+
+  // If a column is named 'image', render a thumbnail.
+  // Supports normal URLs and Google Drive share links:
+  //   https://drive.google.com/file/d/FILE_ID/view?usp=sharing  ->  https://drive.google.com/uc?export=view&id=FILE_ID
+  function gDriveThumb(url) {
+    const m = url.match(/https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\//i);
+    if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+    return url;
+  }
+
+  function renderTable(elId, rows) {
+    const el = document.getElementById(elId);
+    if (!rows.length) { el.innerHTML = '<tr><td>No data</td></tr>'; return; }
+    const [head, ...body] = rows;
+    const lowerHead = head.map(h => h.toLowerCase());
+    const thead = '<thead><tr>' + head.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+    const tbody = '<tbody>' + body.map(r => '<tr>' + r.map((c, i) => {
+      const h = lowerHead[i];
+      if (h === 'image' && c) {
+        const src = gDriveThumb(c);
+        return `<td>${c ? `<a href="${src}" target="_blank" rel="noopener"><img class="thumb" src="${src}" alt="img"></a>` : ''}</td>`;
+      }
+      if (/^https?:\/\//i.test(c)) return `<td><a href="${c}" target="_blank" rel="noopener">open</a></td>`;
+      return `<td>${c}</td>`;
+    }).join('') + '</tr>').join('') + '</tbody>';
+    el.innerHTML = thead + tbody;
+  }
+
+  function sumColumn(rows, columnName) {
+    if (!rows.length) return 0;
+    const [head, ...body] = rows;
+    const idx = head.findIndex(h => h.toLowerCase() === columnName);
+    if (idx === -1) return 0;
+    return body.reduce((acc, r) => acc + (parseFloat(r[idx]) || 0), 0);
+  }
+
+  // Build unpaid labor summary grouped by Name (min/max date, count days, total)
+  function buildUnpaidLaborSummary(laborRows) {
+    if (!laborRows.length) return [];
+    const [head, ...body] = laborRows;
+    const H = head.map(h => h.toLowerCase());
+    const iName = H.indexOf('name'), iDate = H.indexOf('date'), iTotal = H.indexOf('total'), iStatus = H.indexOf('status');
+    if (iName < 0 || iDate < 0 || iTotal < 0 || iStatus < 0) return [];
+
+    const map = new Map();
+    for (const r of body) {
+      if ((r[iStatus] || '').toLowerCase() !== 'unpaid') continue;
+      const name = r[iName];
+      const date = r[iDate];
+      const total = parseFloat(r[iTotal]) || 0;
+      if (!map.has(name)) map.set(name, { dates: [], total: 0 });
+      const obj = map.get(name);
+      obj.dates.push(date);
+      obj.total += total;
+    }
+    const out = [['Name','Date Range','Days','Total Due','Payment']];
+    for (const [name, v] of map.entries()) {
+      if (!v.dates.length) continue;
+      const datesSorted = v.dates.filter(Boolean).sort();
+      const range = datesSorted.length ? `${datesSorted[0]} to ${datesSorted[datesSorted.length - 1]}` : '';
+      out.push([name, range, String(datesSorted.length), `₱${v.total.toLocaleString()}`, 'Unpaid']);
+    }
+    return out;
+  }
+
+  function filterUnpaidMaterials(materialsRows) {
+    if (!materialsRows.length) return [];
+    const [head, ...body] = materialsRows;
+    const H = head.map(h => h.toLowerCase());
+    const iItem = H.indexOf('item'), iSupplier = H.indexOf('supplier'), iTotal = H.indexOf('total'), iStatus = H.indexOf('status'), iImage = H.indexOf('image');
+    const out = [head]; // keep same headers
+    for (const r of body) {
+      if ((r[iStatus] || '').toLowerCase() === 'unpaid') out.push(r);
+    }
+    return out;
+  }
+
+  function sumUnpaid(laborRows, materialsRows) {
+    const sumLabor = (() => {
+      if (!laborRows.length) return 0;
+      const [head, ...body] = laborRows;
+      const iTotal = head.findIndex(h => h.toLowerCase() === 'total');
+      const iStatus = head.findIndex(h => h.toLowerCase() === 'status');
+      if (iTotal < 0 || iStatus < 0) return 0;
+      return body.reduce((a, r) => a + (((r[iStatus]||'').toLowerCase()==='unpaid') ? (parseFloat(r[iTotal])||0) : 0), 0);
+    })();
+    const sumMaterials = (() => {
+      if (!materialsRows.length) return 0;
+      const [head, ...body] = materialsRows;
+      const iTotal = head.findIndex(h => h.toLowerCase() === 'total');
+      const iStatus = head.findIndex(h => h.toLowerCase() === 'status');
+      if (iTotal < 0 || iStatus < 0) return 0;
+      return body.reduce((a, r) => a + (((r[iStatus]||'').toLowerCase()==='unpaid') ? (parseFloat(r[iTotal])||0) : 0), 0);
+    })();
+    return sumLabor + sumMaterials;
+  }
+
+  (async function init() {
+    try {
+      const [tasks, labor, materials] = await Promise.all([
+        csvToRows(paths.tasks),
+        csvToRows(paths.labor),
+        csvToRows(paths.materials)
+      ]);
+
+      // Render the three data tabs
+      renderTable('tasksTable', tasks);
+      renderTable('laborTable', labor);
+      renderTable('materialsTable', materials);
+
+      // Totals
+      const laborTotal = sumColumn(labor, 'total');
+      document.getElementById('laborTotal').textContent =
+        labor.length ? 'Labor total: ₱' + laborTotal.toLocaleString() : '';
+
+      const materialsTotal = sumColumn(materials, 'total');
+      document.getElementById('materialsTotal').textContent =
+        materials.length ? 'Materials total: ₱' + materialsTotal.toLocaleString() : '';
+
+      // Invoices (auto from Unpaid)
+      const unpaidSum = sumUnpaid(labor, materials);
+      document.getElementById('unpaidSum').textContent = '₱' + unpaidSum.toLocaleString();
+
+      const unpaidLaborSummary = buildUnpaidLaborSummary(labor);
+      renderTable('unpaidLaborTable', unpaidLaborSummary);
+
+      const unpaidMaterials = filterUnpaidMaterials(materials);
+      renderTable('unpaidMaterialsTable', unpaidMaterials);
+    } catch (e) {
+      console.error(e);
+      alert('Some data did not load. Ensure tasks.csv, labor.csv, materials.csv exist in /data/current/.');
+    }
+  })();
+</script>
+</body>
+</html>
