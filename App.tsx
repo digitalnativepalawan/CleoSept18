@@ -13,6 +13,7 @@ import Funding from './components/dashboard/Funding';
 import ESGCommitment from './components/ESGCommitment';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import Chatbot from './components/Chatbot';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import LoginModal from './components/auth/LoginModal';
 import SignUpModal from './components/auth/SignUpModal';
@@ -223,6 +224,7 @@ const AppContent: React.FC = () => {
                 )}
             </main>
             <Footer />
+            <Chatbot />
         </div>
     );
 };

@@ -1,6 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Chat } from "@google/genai";
+
+// Access GoogleGenAI from global window object (loaded via CDN)
+declare global {
+  interface Window {
+    GoogleGenAI: any;
+  }
+}
 
 // Define message type
 interface Message {
@@ -13,7 +19,7 @@ const Chatbot: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [input, setInput] = useState('');
-    const chatRef = useRef<Chat | null>(null);
+    const chatRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Initialize the chat session
@@ -26,7 +32,16 @@ const Chatbot: React.FC = () => {
             return;
         }
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        // Check if GoogleGenAI is available globally (loaded via CDN)
+        if (!window.GoogleGenAI) {
+            console.error("GoogleGenAI is not available. Please ensure the CDN is loaded.");
+            setMessages([
+                { sender: 'bot', text: 'Hello! I am currently offline as the AI service is not available. Please check the setup.' }
+            ]);
+            return;
+        }
+
+        const ai = new window.GoogleGenAI({ apiKey: process.env.API_KEY });
         chatRef.current = ai.chats.create({
             model: 'gemini-2.5-flash',
             config: {
