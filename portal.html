@@ -18,16 +18,9 @@
     th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; white-space:nowrap; vertical-align:top }
     th { background:#f3f4f6 }
     img.thumb { width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid #eee }
-    .admin { margin-top:24px; padding:16px; border:1px dashed #ccc; border-radius:6px; background:#fffef7 }
-    .admin small { color:#666 }
-    .hide { display:none }
-    input[type="password"], input[type="text"], input[type="date"] { padding:6px; border:1px solid #ccc; border-radius:6px; }
-    button { padding:6px 12px; border:1px solid #ccc; border-radius:6px; background:#f9f9f9; cursor:pointer }
-    .stat { margin:12px 0; font-weight:600 }
     .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#e5fbe5; color:#065f46; font-size:12px }
     .pill.red { background:#fde7e7; color:#7f1d1d }
     .card { border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fff }
-    .grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px }
   </style>
 </head>
 <body>
@@ -44,106 +37,38 @@
 
   <!-- TASKS -->
   <section id="tasks" class="panel active">
-    <p><a id="dlTasks" href="#">Download tasks.csv</a></p>
     <div class="wrap"><table id="tasksTable"></table></div>
   </section>
 
   <!-- LABOR -->
   <section id="labor" class="panel">
-    <p><a id="dlLabor" href="#">Download labor.csv</a></p>
     <div class="wrap"><table id="laborTable"></table></div>
-    <p class="note" id="laborTotal"></p>
   </section>
 
   <!-- MATERIALS -->
   <section id="materials" class="panel">
-    <p><a id="dlMaterials" href="#">Download materials.csv</a></p>
     <div class="wrap"><table id="materialsTable"></table></div>
-    <p class="note" id="materialsTotal"></p>
   </section>
 
-  <!-- INVOICES (auto from Unpaid) -->
+  <!-- INVOICES -->
   <section id="invoices" class="panel">
     <div class="card">
-      <div class="stat">Total Unpaid Balance: <span id="unpaidSum" class="pill red">₱0</span></div>
+      <div>Total Unpaid Balance: <span id="unpaidSum" class="pill red">₱0</span></div>
       <p class="note">Built automatically from rows with <strong>Status = Unpaid</strong> in Labor and Materials.</p>
     </div>
-    <h3>Consolidated Unpaid Labor</h3>
+    <h3>Unpaid Labor</h3>
     <div class="wrap"><table id="unpaidLaborTable"></table></div>
     <h3 style="margin-top:18px">Unpaid Materials</h3>
     <div class="wrap"><table id="unpaidMaterialsTable"></table></div>
   </section>
 
-  <!-- Admin (Edit links + Token) -->
-  <div class="admin" id="adminBox">
-    <strong>Admin</strong>
-    <div id="adminLocked">
-      <p class="note">Enter passphrase to show admin tools:</p>
-      <input id="pass" type="password" placeholder="passphrase">
-      <button id="unlock">Unlock</button>
-      <div><small>Tip: change the passphrase in the code below.</small></div>
-    </div>
-    <div id="adminLinks" class="hide">
-      <p><strong>Quick edit on GitHub</strong></p>
-      <ul>
-        <li><a id="editTasks" target="_blank" rel="noopener">Edit tasks.csv</a></li>
-        <li><a id="editLabor" target="_blank" rel="noopener">Edit labor.csv</a></li>
-        <li><a id="editMaterials" target="_blank" rel="noopener">Edit materials.csv</a></li>
-      </ul>
-
-      <p class="note" style="margin-top:12px"><strong>Commit from this page (admin only)</strong></p>
-      <div style="margin-bottom:8px">
-        <input id="ghToken" type="password" placeholder="GitHub token (repo contents: read/write)" style="width:320px">
-      </div>
-
-      <!-- Optional mini form if you want to add without your modal (can remove) -->
-      <!--
-      <div class="grid">
-        <input id="taskName" placeholder="Task name">
-        <input id="taskDue" type="date" placeholder="Due">
-        <select id="taskStatus"><option>Backlog</option><option>In Progress</option><option>Done</option></select>
-        <input id="taskNotes" placeholder="Notes (optional)">
-      </div>
-      <button onclick="onAddTaskClick()" style="margin-top:8px">Add Task → Commit</button>
-      -->
-      <small>Tip: your existing “Add Task” modal can call <code>onAddTaskClick()</code> directly.</small>
-    </div>
-  </div>
-
 <script>
-  /*** SETTINGS — customized for you ***/
-  const OWNER  = 'digitalnativepalawan';
-  const REPO   = 'CleoSept18';
-  const BRANCH = 'main';
-  const BASE   = '/CleoSept18';       // project page path
-  const ADMIN_PASSPHRASE = 'palawan'; // change if you want
-
-  /*** Paths ***/
+  const BASE = '/CleoSept18';
   const paths = {
-    tasks:     BASE + '/data/current/tasks.csv',
-    labor:     BASE + '/data/current/labor.csv',
+    tasks: BASE + '/data/current/tasks.csv',
+    labor: BASE + '/data/current/labor.csv',
     materials: BASE + '/data/current/materials.csv'
   };
-
-  // Download links
-  document.getElementById('dlTasks').href     = paths.tasks;
-  document.getElementById('dlLabor').href     = paths.labor;
-  document.getElementById('dlMaterials').href = paths.materials;
-
-  // Admin edit links (GitHub web editor)
-  const gh = (p) => `https://github.com/${OWNER}/${REPO}/edit/${BRANCH}/${p}`;
-  document.getElementById('editTasks').href     = gh('data/current/tasks.csv');
-  document.getElementById('editLabor').href     = gh('data/current/labor.csv');
-  document.getElementById('editMaterials').href = gh('data/current/materials.csv');
-
-  // Unlock admin panel
-  document.getElementById('unlock').addEventListener('click', () => {
-    const ok = document.getElementById('pass').value === ADMIN_PASSPHRASE;
-    if (ok) { 
-      document.getElementById('adminLocked').classList.add('hide');
-      document.getElementById('adminLinks').classList.remove('hide');
-    } else alert('Wrong passphrase');
-  });
 
   // Tabs
   document.querySelectorAll('.tab').forEach(btn => {
@@ -155,20 +80,12 @@
     });
   });
 
-  // --- Helpers ---
   async function csvToRows(url) {
     const res = await fetch(url + '?v=' + Date.now());
     if (!res.ok) return [];
     const text = (await res.text()).trim();
     if (!text) return [];
     return text.split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
-  }
-
-  // Google Drive share link -> direct view
-  function gDriveThumb(url) {
-    const m = url.match(/https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\//i);
-    if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
-    return url;
   }
 
   function renderTable(elId, rows) {
@@ -180,10 +97,9 @@
     const tbody = '<tbody>' + body.map(r => '<tr>' + r.map((c, i) => {
       const h = lowerHead[i];
       if (h === 'image' && c) {
-        const src = gDriveThumb(c);
-        return `<td>${c ? `<a href="${src}" target="_blank" rel="noopener"><img class="thumb" src="${src}" alt="img"></a>` : ''}</td>`;
+        return `<td><a href="${c}" target="_blank"><img class="thumb" src="${c}" alt="img"></a></td>`;
       }
-      if (/^https?:\/\//i.test(c)) return `<td><a href="${c}" target="_blank" rel="noopener">open</a></td>`;
+      if (/^https?:\/\//i.test(c)) return `<td><a href="${c}" target="_blank">open</a></td>`;
       return `<td>${c}</td>`;
     }).join('') + '</tr>').join('') + '</tbody>';
     el.innerHTML = thead + tbody;
@@ -197,159 +113,20 @@
     return body.reduce((acc, r) => acc + (parseFloat(r[idx]) || 0), 0);
   }
 
-  // Build unpaid labor summary grouped by Name
-  function buildUnpaidLaborSummary(laborRows) {
-    if (!laborRows.length) return [];
-    const [head, ...body] = laborRows;
-    const H = head.map(h => h.toLowerCase());
-    const iName = H.indexOf('name'), iDate = H.indexOf('date'), iTotal = H.indexOf('total'), iStatus = H.indexOf('status');
-    if (iName < 0 || iDate < 0 || iTotal < 0 || iStatus < 0) return [];
-
-    const map = new Map();
-    for (const r of body) {
-      if ((r[iStatus] || '').toLowerCase() !== 'unpaid') continue;
-      const name = r[iName];
-      const date = r[iDate];
-      const total = parseFloat(r[iTotal]) || 0;
-      if (!map.has(name)) map.set(name, { dates: [], total: 0 });
-      const obj = map.get(name);
-      obj.dates.push(date);
-      obj.total += total;
-    }
-    const out = [['Name','Date Range','Days','Total Due','Payment']];
-    for (const [name, v] of map.entries()) {
-      if (!v.dates.length) continue;
-      const datesSorted = v.dates.filter(Boolean).sort();
-      const range = datesSorted.length ? `${datesSorted[0]} to ${datesSorted[datesSorted.length - 1]}` : '';
-      out.push([name, range, String(datesSorted.length), `₱${v.total.toLocaleString()}`, 'Unpaid']);
-    }
-    return out;
+  function filterUnpaid(rows) {
+    if (!rows.length) return [];
+    const [head, ...body] = rows;
+    const iStatus = head.findIndex(h => h.toLowerCase() === 'status');
+    return [head, ...body.filter(r => (r[iStatus] || '').toLowerCase() === 'unpaid')];
   }
 
-  function filterUnpaidMaterials(materialsRows) {
-    if (!materialsRows.length) return [];
-    const [head, ...body] = materialsRows;
-    const H = head.map(h => h.toLowerCase());
-    const iStatus = H.indexOf('status');
-    const out = [head];
-    for (const r of body) {
-      if ((r[iStatus] || '').toLowerCase() === 'unpaid') out.push(r);
-    }
-    return out;
-  }
-
-  function sumUnpaid(laborRows, materialsRows) {
-    const sumLabor = (() => {
-      if (!laborRows.length) return 0;
-      const [h, ...b] = laborRows;
-      const iT = h.findIndex(x => x.toLowerCase() === 'total');
-      const iS = h.findIndex(x => x.toLowerCase() === 'status');
-      return b.reduce((a, r) => a + (((r[iS]||'').toLowerCase()==='unpaid') ? (parseFloat(r[iT])||0) : 0), 0);
-    })();
-    const sumMat = (() => {
-      if (!materialsRows.length) return 0;
-      const [h, ...b] = materialsRows;
-      const iT = h.findIndex(x => x.toLowerCase() === 'total');
-      const iS = h.findIndex(x => x.toLowerCase() === 'status');
-      return b.reduce((a, r) => a + (((r[iS]||'').toLowerCase()==='unpaid') ? (parseFloat(r[iT])||0) : 0), 0);
-    })();
-    return sumLabor + sumMat;
-  }
-
-  (async function init() {
-    try {
-      const [tasks, labor, materials] = await Promise.all([
-        csvToRows(paths.tasks),
-        csvToRows(paths.labor),
-        csvToRows(paths.materials)
-      ]);
-
-      renderTable('tasksTable', tasks);
-      renderTable('laborTable', labor);
-      renderTable('materialsTable', materials);
-
-      const laborTotal = sumColumn(labor, 'total');
-      document.getElementById('laborTotal').textContent =
-        labor.length ? 'Labor total: ₱' + laborTotal.toLocaleString() : '';
-
-      const materialsTotal = sumColumn(materials, 'total');
-      document.getElementById('materialsTotal').textContent =
-        materials.length ? 'Materials total: ₱' + materialsTotal.toLocaleString() : '';
-
-      const unpaidSum = sumUnpaid(labor, materials);
-      document.getElementById('unpaidSum').textContent = '₱' + unpaidSum.toLocaleString();
-
-      const unpaidLaborSummary = buildUnpaidLaborSummary(labor);
-      renderTable('unpaidLaborTable', unpaidLaborSummary);
-
-      const unpaidMaterials = filterUnpaidMaterials(materials);
-      renderTable('unpaidMaterialsTable', unpaidMaterials);
-    } catch (e) {
-      console.error(e);
-      alert('Some data did not load. Ensure CSVs exist in /data/current/.');
-    }
-  })();
-
-  /* ---------- Commit to GitHub from the portal (Tasks) ---------- */
-  async function ghGet(path, token){
-    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(path)}?ref=${BRANCH}`,{
-      headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json'}
-    });
-    if (r.status === 404) return { content: btoa(''), sha: null }; // new file case
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-  async function ghPut(path, token, message, b64, sha){
-    const body = { message, content: b64, branch: BRANCH, ...(sha?{sha}:{}) };
-    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodeURIComponent(path)}`,{
-      method:'PUT',
-      headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-  const toB64 = s => btoa(unescape(encodeURIComponent(s)));
-  const fromB64 = s => decodeURIComponent(escape(atob(s)));
-  const toISO = (d) => {
-    if(!d) return '';
-    const dt = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d+'T00:00:00') : new Date(d);
-    return isNaN(dt) ? '' : dt.toISOString().slice(0,10);
-  };
-  const scrub = v => (v||'').replace(/[\r\n]/g,' ').replace(/,/g,'');
-
-  // Call this from your modal's "Add Task" button
-  async function onAddTaskClick(){
-    try{
-      const token = document.getElementById('ghToken').value.trim();
-      if(!token) return alert('Paste your GitHub token first (admin only).');
-
-      const task   = scrub(document.getElementById('taskName').value);
-      const status = scrub(document.getElementById('taskStatus').value || 'Backlog');
-      const dueISO = toISO(document.getElementById('taskDue').value);
-      const notes  = scrub((document.getElementById('taskNotes')?.value)||'');
-
-      if(!task) return alert('Task name is required.');
-
-      const payment = 'Unpaid';
-      const cost    = '0';
-      const image   = ''; // add later if needed
-
-      const path = 'data/current/tasks.csv';
-      const header = 'task,status,payment,due_date,cost,image';
-
-      const meta = await ghGet(path, token);
-      const csv  = meta.content ? fromB64(meta.content) : '';
-      const next = (csv.trim() ? csv.trimEnd() : header) + `\n${task},${status},${payment},${dueISO},${cost},${image}`;
-
-      await ghPut(path, token, `chore: add task "${task}"`, toB64(next), meta.sha || undefined);
-
-      location.reload();
-    }catch(e){
-      console.error(e);
-      alert('Save failed: ' + e.message);
-    }
-  }
-</script>
-</body>
-</html>
+  Promise.all([
+    csvToRows(paths.tasks).then(r => renderTable('tasksTable', r)),
+    csvToRows(paths.labor).then(r => {
+      renderTable('laborTable', r);
+      const unpaid = filterUnpaid(r);
+      renderTable('unpaidLaborTable', unpaid);
+      return sumColumn(unpaid, 'total');
+    }),
+    csvToRows(paths.materials).then(r => {
+      renderT
