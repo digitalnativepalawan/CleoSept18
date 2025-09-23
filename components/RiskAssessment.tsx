@@ -42,10 +42,10 @@ const RiskCard: React.FC<{ title: string; children: React.ReactNode; icon: React
 
 const RiskAssessment: React.FC = () => {
     return (
-        <section className="py-16 md:py-24 bg-white section-pad" aria-labelledby="risk-assessment-title">
+        <section className="py-16 md:py-24 bg-white section-pad" aria-labelledby="risk-assessment">
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 container-site">
                 <div className="text-center mb-12">
-                    <h2 id="risk-assessment-title" className="text-3xl md:text-4xl font-serif font-bold text-gray-900">Risk Assessment & Mitigation</h2>
+                    <h2 id="risk-assessment" className="text-3xl md:text-4xl font-serif font-bold text-gray-900">Risk Assessment & Mitigation</h2>
                     <p className="mt-4 text-lg text-gray-500">A proactive approach to identifying and managing potential challenges.</p>
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

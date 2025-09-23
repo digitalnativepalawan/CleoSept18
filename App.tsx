@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/dashboard/Hero';
 import ExecutiveSummary from './components/ExecutiveSummary';
@@ -13,16 +13,12 @@ import Funding from './components/dashboard/Funding';
 import ESGCommitment from './components/ESGCommitment';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
-import { AuthProvider, useAuth } from './components/auth/AuthContext';
-import LoginModal from './components/auth/LoginModal';
-import SignUpModal from './components/auth/SignUpModal';
-import Dashboard from './components/dashboard/Dashboard';
-import PinGate from './components/PinGate';
-import PortalLogin from './components/auth/PortalLogin';
 import BlogLayout from './components/blog/BlogLayout';
-import { BlogPost } from './components/dashboard/BlogView';
+import { BlogPost } from './components/blog/BlogPage';
+import PortalDashboard from './components/portal/PortalDashboard';
+import PinGate from './components/PinGate';
+import { usePinGate } from './hooks/usePinGate';
 
-const BLOG_POSTS_KEY = 'binga_blog_posts';
 
 const initialBlogPosts: BlogPost[] = [
   {
@@ -75,70 +71,11 @@ const LandingPageContent: React.FC = () => (
 );
 
 
-const AppContent: React.FC = () => {
-    const { currentUser, loading, login, signup } = useAuth();
-    const [isLoginModalOpen, setLoginModalOpen] = useState(false);
-    const [isSignUpModalOpen, setSignUpModalOpen] = useState(false);
-    const [view, setView] = useState<'landing' | 'portal' | 'blog' | 'blogPost'>('landing');
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+const App: React.FC = () => {
+    const [view, setView] = useState<'landing' | 'blog' | 'blogPost' | 'portal'>('landing');
+    const [blogPosts] = useState<BlogPost[]>(initialBlogPosts);
     const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-
-    useEffect(() => {
-        try {
-            const storedPosts = localStorage.getItem(BLOG_POSTS_KEY);
-            if (storedPosts) {
-                setBlogPosts(JSON.parse(storedPosts));
-            } else {
-                setBlogPosts(initialBlogPosts);
-                localStorage.setItem(BLOG_POSTS_KEY, JSON.stringify(initialBlogPosts));
-            }
-        } catch (error) {
-            console.error("Failed to load blog posts:", error);
-            setBlogPosts(initialBlogPosts);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (blogPosts.length > 0) {
-            localStorage.setItem(BLOG_POSTS_KEY, JSON.stringify(blogPosts));
-        }
-    }, [blogPosts]);
-
-    const handleAddBlogPost = (newPost: Omit<BlogPost, 'id'>) => {
-        setBlogPosts(prevPosts => [
-            { ...newPost, id: Date.now() },
-            ...prevPosts
-        ]);
-    };
-
-    const handleOpenLogin = () => {
-        setSignUpModalOpen(false);
-        setLoginModalOpen(true);
-    };
-
-    const handleOpenSignUp = () => {
-        setLoginModalOpen(false);
-        setSignUpModalOpen(true);
-    };
-    
-    const handleRoleSelect = () => {
-        handleOpenLogin();
-    };
-
-    const handleDevLogin = async () => {
-        const devEmail = 'admin@dev.local';
-        const devPassword = 'password';
-        try {
-            await login(devEmail, devPassword);
-        } catch (error) {
-            try {
-                await signup(devEmail, devPassword);
-            } catch (signupError) {
-                console.error("Developer login failed:", signupError);
-                alert("Developer login failed. You may need to clear application storage and try again.");
-            }
-        }
-    };
+    const { isAuthenticated, attemptLogin } = usePinGate();
 
     const handleViewBlog = () => {
         setView('blog');
@@ -149,90 +86,48 @@ const AppContent: React.FC = () => {
         setSelectedPost(post);
         setView('blogPost');
     };
-
-    const handleLoginClick = () => {
-        setView('portal');
-        handleOpenLogin();
-    };
-
-    const handleSignUpClick = () => {
-        setView('portal');
-        handleOpenSignUp();
-    };
-
-    const handlePortalClick = () => {
-        setView('portal');
-    };
-
-    if (loading) {
-        return (
-            <div className="h-screen w-screen flex items-center justify-center bg-gray-100">
-                <p className="text-gray-500 animate-pulse">Loading Application...</p>
-            </div>
-        );
+    
+    const handleBackToLanding = () => {
+        setView('landing');
+        setSelectedPost(null);
     }
     
-    if (view === 'portal') {
-        if (currentUser) {
+    const handleViewPortal = () => {
+        setView('portal');
+        setSelectedPost(null);
+    };
+
+    const renderContent = () => {
+        if (view === 'portal') {
+            return isAuthenticated ? <PortalDashboard /> : <PinGate onLoginAttempt={attemptLogin} />;
+        }
+        if (view === 'blog' || view === 'blogPost') {
             return (
-                <PinGate>
-                    <Dashboard 
-                        onSwitchToLanding={() => setView('landing')}
-                        blogPosts={blogPosts}
-                        onAddBlogPost={handleAddBlogPost} 
-                    />
-                </PinGate>
+                 <BlogLayout
+                    posts={blogPosts.filter(p => p.status === 'Published')}
+                    selectedPost={selectedPost}
+                    onSelectPost={handleViewBlogPost}
+                    onBackToBlogList={handleViewBlog}
+                />
             );
         }
-
-        return (
-             <>
-                <PortalLogin onSelectRole={handleRoleSelect} onDevLogin={handleDevLogin} />
-                <LoginModal 
-                    isOpen={isLoginModalOpen} 
-                    onClose={() => setLoginModalOpen(false)} 
-                    onSwitchToSignUp={handleOpenSignUp} 
-                />
-                <SignUpModal 
-                    isOpen={isSignUpModalOpen} 
-                    onClose={() => setSignUpModalOpen(false)} 
-                    onSwitchToLogin={handleOpenLogin}
-                />
-            </>
-        );
+        return <LandingPageContent />;
     }
     
-    // Landing Page, Blog, and Single Post views share a common layout
+    const showFooter = view !== 'portal';
+
     return (
         <div className="bg-white">
             <Header 
-                onLoginClick={handleLoginClick} 
-                onSignUpClick={handleSignUpClick} 
-                onPortalClick={handlePortalClick}
                 onBlogClick={handleViewBlog}
+                onHomeClick={handleBackToLanding}
+                onPortalClick={handleViewPortal}
             />
             <main>
-                {view === 'landing' && <LandingPageContent />}
-                {(view === 'blog' || view === 'blogPost') && (
-                    <BlogLayout
-                        posts={blogPosts.filter(p => p.status === 'Published')}
-                        selectedPost={selectedPost}
-                        onSelectPost={handleViewBlogPost}
-                        onBackToBlogList={handleViewBlog}
-                    />
-                )}
+                {renderContent()}
             </main>
-            <Footer />
+            {showFooter && <Footer />}
         </div>
-    );
-};
-
-
-const App: React.FC = () => {
-    return (
-        <AuthProvider>
-            <AppContent />
-        </AuthProvider>
     );
 };
 

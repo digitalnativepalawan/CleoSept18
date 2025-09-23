@@ -14,12 +14,12 @@ const Hero: React.FC = () => {
                     Villas + Sustainable Farming + Smart Hardware + Digital Integration
                 </p>
                 <div className="flex justify-center space-x-4">
-                    <button className="bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-8 rounded-lg shadow-md transition-colors duration-300">
+                    <a href="/Binga_Beach_Deck.pdf" download className="bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-8 rounded-lg shadow-md transition-colors duration-300">
                         Download Deck
-                    </button>
-                    <button className="bg-white border border-gray-300 text-gray-800 font-semibold py-3 px-8 rounded-lg shadow-sm hover:bg-gray-100 transition-colors duration-300">
+                    </a>
+                    <a href="#contact-title" className="bg-white border border-gray-300 text-gray-800 font-semibold py-3 px-8 rounded-lg shadow-sm hover:bg-gray-100 transition-colors duration-300">
                         Schedule Call
-                    </button>
+                    </a>
                 </div>
 
                 <div className="mt-24 text-center">

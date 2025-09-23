@@ -1,7 +1,7 @@
 import React from 'react';
 import BlogPage from './BlogPage';
 import BlogPostPage from './BlogPostPage';
-import { BlogPost } from '../dashboard/BlogView';
+import { BlogPost } from './BlogPage';
 
 // FIX: Removed unused props to resolve a TypeScript error in App.tsx.
 // The component's responsibility is to display blog content, not the main site header/navigation,

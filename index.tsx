@@ -1,35 +1,16 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Binga Beach • Investor Hub</title>
-  <style>
-    html,body{margin:0;height:100%}
-    body{display:flex;align-items:center;justify-content:center;background:#0b132b;
-         font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-    .card{width:min(880px,92vw);background:#fff;color:#0f172a;border-radius:16px;
-          padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-    h1{margin:0 0 6px;font-size:28px}
-    p{margin:6px 0 16px;color:#64748b}
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
-    a.button{padding:12px 16px;border-radius:12px;border:1px solid #e5e7eb;
-             text-decoration:none;color:#0b132b;background:#f8fafc}
-    a.button:hover{background:#eef2ff}
-    .small{font-size:12px;color:#64748b;margin-top:12px}
-  </style>
-</head>
-<body>
-  <main class="card">
-    <h1>Binga Beach • Investor Hub</h1>
-    <p>Welcome. Use the links below to view the live dashboard.</p>
-    <div class="actions">
-      <a class="button" href="/CleoSept18/portal.html">Open Investor Portal</a>
-      <a class="button" href="/CleoSept18/data/current/tasks.csv">tasks.csv</a>
-      <a class="button" href="/CleoSept18/data/current/labor.csv">labor.csv</a>
-      <a class="button" href="/CleoSept18/data/current/materials.csv">materials.csv</a>
-    </div>
-    <div class="small">If a link 404s, wait a minute and refresh — GitHub Pages may still be deploying.</div>
-  </main>
-</body>
-</html>
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

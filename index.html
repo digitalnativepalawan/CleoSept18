@@ -1,34 +1,62 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Binga Beach • Investor Hub</title>
-  <style>
-    :root { --bg:#0b132b; --card:#ffffff; --text:#0f172a; --muted:#64748b }
-    html,body { margin:0; height:100%; }
-    body { display:flex; align-items:center; justify-content:center; background:var(--bg); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    .card { width:min(880px, 92vw); background:var(--card); color:var(--text); border-radius:16px; padding:28px; box-shadow: 0 10px 30px rgba(0,0,0,.18);}
-    h1 { margin:0 0 6px 0; font-size:28px }
-    p { margin:6px 0 16px; color:var(--muted) }
-    .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px }
-    a.button { display:inline-block; padding:12px 16px; border-radius:12px; border:1px solid #e5e7eb; text-decoration:none; color:#0b132b; background:#f8fafc }
-    a.button:hover { background:#eef2ff }
-    .small { font-size:12px; color:#64748b; margin-top:12px }
-  </style>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binga Beach - Palawan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            },
+            colors: {
+                primary: {
+                    DEFAULT: '#007aff',
+                    hover: '#005ecb'
+                },
+                secondary: '#f0f9ff',
+                lightgreen: '#f0fff4',
+            }
+          }
+        }
+      }
+    </script>
+<style>
+/* Uniform app icon (uses currentColor) */
+.ui-icon-xs { width: 0.625rem; height: 0.625rem; background: currentColor; }
+.ui-icon-sm { width: 0.75rem;  height: 0.75rem;  background: currentColor; }
+.ui-icon-md { width: 0.875rem; height: 0.875rem; background: currentColor; }
+.ui-icon-lg { width: 1rem;    height: 1rem;    background: currentColor; }
+
+/* Social icons: inherit color, subtle hover */
+.social-links { display: inline-flex; gap: 16px; align-items: center; color: #6b7280; } /* slate-500 */
+.social-link { opacity: 0.85; transition: transform .15s ease, opacity .15s ease; }
+.social-link:hover { opacity: 1; transform: scale(1.06); }
+.social-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 6px; }
+.social-icon { display: inline-block; vertical-align: middle; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.2.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0"
+  }
+}
+</script>
 </head>
 <body>
-  <main class="card">
-    <h1>Binga Beach • Investor Hub</h1>
-    <p>Welcome. Use the links below to view the live dashboards.</p>
-    <div class="actions">
-      <!-- IMPORTANT: keep /CleoSept18 prefix for project pages -->
-      <a class="button" href="/CleoSept18/portal.html">Open Investor Portal</a>
-      <a class="button" href="/CleoSept18/data/current/tasks.csv">tasks.csv</a>
-      <a class="button" href="/CleoSept18/data/current/labor.csv">labor.csv</a>
-      <a class="button" href="/CleoSept18/data/current/materials.csv">materials.csv</a>
-    </div>
-    <div class="small">If a link 404s, wait a minute and refresh — GitHub Pages may still be deploying.</div>
-  </main>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

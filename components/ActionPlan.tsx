@@ -146,7 +146,7 @@ const timelineData = [
 
 const ActionPlan: React.FC = () => {
     return (
-        <Section title="Action Plan & Timeline" subtitle="Our strategic roadmap from inception to full-scale operation and investor returns.">
+        <Section title="Action Plan" subtitle="Our strategic roadmap from inception to full-scale operation and investor returns.">
             <div className="mt-8 max-w-3xl mx-auto">
                 <div className="space-y-12">
                      {timelineData.map((item, index) => (

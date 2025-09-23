@@ -52,27 +52,23 @@ const Contact: React.FC = () => {
                             </div>
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold mb-6">Send Us a Message</h3>
-                            <form className="space-y-4">
+                           <h3 className="text-xl font-bold mb-6">Send Us a Message</h3>
+                            <form action="#" method="POST" className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                                 <div>
-                                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
-                                    <input type="text" id="fullName" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"/>
+                                    <label htmlFor="name" className="sr-only">Full name</label>
+                                    <input type="text" name="name" id="name" autoComplete="name" placeholder="Full name" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"/>
                                 </div>
                                 <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                                    <input type="email" id="email" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"/>
+                                    <label htmlFor="email" className="sr-only">Email</label>
+                                    <input type="email" name="email" id="email" autoComplete="email" placeholder="Email address" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"/>
                                 </div>
                                 <div>
-                                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Subject (Optional)</label>
-                                    <input type="text" id="subject" className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"/>
-                                </div>
-                                <div>
-                                    <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
-                                    <textarea id="message" rows={5} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"></textarea>
+                                    <label htmlFor="message" className="sr-only">Message</label>
+                                    <textarea name="message" id="message" rows={4} placeholder="Your message" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
                                 </div>
                                 <div>
                                     <button type="submit" className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors duration-300">
-                                        Send Inquiry
+                                        Submit
                                     </button>
                                 </div>
                             </form>

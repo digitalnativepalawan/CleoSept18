@@ -25,9 +25,9 @@ const Footer: React.FC = () => {
                     <div className="col-span-2">
                         <h5 className="font-bold text-gray-800">Cleopatra SIRV × Binga Beach Brothers</h5>
                         <p className="mt-2">A balanced alliance delivering real-world assets in Palawan: eco-villas & resort ops, farm-to-table agriculture, hardware & construction supply, and compliant structures with transparent reporting.</p>
-                        <form className="mt-4 flex flex-col sm:flex-row gap-2">
-                            <input type="email" placeholder="Enter your email" className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-gray-900" />
-                            <button type="submit" className="bg-white text-gray-700 px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 font-medium whitespace-nowrap">Join our quarterly update</button>
+                        <form className="mt-4 flex flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
+                            <input type="email" placeholder="Quarterly updates are paused" disabled className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:outline-none text-gray-500 cursor-not-allowed" />
+                            <button type="button" disabled className="bg-gray-200 text-gray-500 px-6 py-2 border border-gray-300 rounded-lg font-medium whitespace-nowrap cursor-not-allowed">Join</button>
                         </form>
                         <SocialLinks className="mt-6" />
                     </div>
@@ -35,11 +35,11 @@ const Footer: React.FC = () => {
                     <nav aria-labelledby="footer-nav-navigate">
                         <h6 id="footer-nav-navigate" className="font-semibold text-gray-800 mb-3">Navigate</h6>
                         <ul className="space-y-2">
-                            <li><a href="#" className="hover:text-blue-500">Executive Summary</a></li>
-                            <li><a href="#" className="hover:text-blue-500">Market</a></li>
-                            <li><a href="#" className="hover:text-blue-500">Financials</a></li>
-                            <li><a href="#" className="hover:text-blue-500">Risks</a></li>
-                            <li><a href="#" className="hover:text-blue-500">Timeline</a></li>
+                            <li><a href="#executive-summary" className="hover:text-blue-500">Executive Summary</a></li>
+                            <li><a href="#market-analysis" className="hover:text-blue-500">Market</a></li>
+                            <li><a href="#financial-projections" className="hover:text-blue-500">Financials</a></li>
+                            <li><a href="#risk-assessment" className="hover:text-blue-500">Risks</a></li>
+                            <li><a href="#action-plan" className="hover:text-blue-500">Timeline</a></li>
                         </ul>
                     </nav>
 
@@ -56,10 +56,10 @@ const Footer: React.FC = () => {
                     <nav aria-labelledby="footer-nav-resources">
                         <h6 id="footer-nav-resources" className="font-semibold text-gray-800 mb-3">Resources</h6>
                         <ul className="space-y-2">
-                            <li><a href="#" className="hover:text-blue-500">Download Deck (PDF)</a></li>
-                            <li><a href="#" className="hover:text-blue-500">Schedule Briefing</a></li>
+                            <li><a href="/Binga_Beach_Deck.pdf" download className="hover:text-blue-500">Download Deck (PDF)</a></li>
+                            <li><a href="#contact-title" className="hover:text-blue-500">Schedule Briefing</a></li>
                             <li><a href="#" className="hover:text-blue-500">FAQ</a></li>
-                            <li><a href="#" className="hover:text-blue-500">Contact</a></li>
+                            <li><a href="#contact-title" className="hover:text-blue-500">Contact</a></li>
                         </ul>
                     </nav>
 
@@ -70,12 +70,6 @@ const Footer: React.FC = () => {
                             <p>david@bingabeach.com</p>
                             <p>+63 947 444 3597</p>
                         </address>
-                        <div className="mt-4">
-                            <button className="w-full text-left flex justify-between items-center p-2 border rounded-md">
-                                <span>PHP (₱)</span>
-                                <span className="text-gray-400 text-xs">▼</span>
-                            </button>
-                        </div>
                     </div>
                 </div>
 

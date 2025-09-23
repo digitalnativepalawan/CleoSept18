@@ -1,5 +1,5 @@
 import React from 'react';
-import { BlogPost } from '../dashboard/BlogView';
+import { BlogPost } from './BlogPage';
 
 interface BlogPostPageProps {
     post: BlogPost;

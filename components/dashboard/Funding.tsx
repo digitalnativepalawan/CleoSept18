@@ -77,9 +77,9 @@ const Funding: React.FC = () => {
                             Direct equity stake in the holding company, including profit sharing, and a potential board seat.
                         </InvestmentTier>
                     </div>
-                     <button className="w-full mt-8 bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-6 rounded-lg shadow-sm transition-colors duration-300">
+                     <a href="mailto:david@bingabeach.com?subject=Investment%20Inquiry" className="block text-center w-full mt-8 bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-6 rounded-lg shadow-sm transition-colors duration-300">
                         Schedule a Call
-                    </button>
+                    </a>
                 </Card>
                 <Card className="flex flex-col">
                     <div>

@@ -1,5 +1,15 @@
 import React from 'react';
-import { BlogPost } from '../dashboard/BlogView';
+
+export interface BlogPost {
+    id: number;
+    title: string;
+    author: string;
+    publishDate: string;
+    status: 'Draft' | 'Published';
+    imageUrl: string;
+    excerpt: string;
+    content: string;
+}
 
 interface BlogPostCardProps {
     post: BlogPost;

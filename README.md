@@ -1,14 +1,20 @@
-# Staging PIN Gate
-The /portal admin can be gated in staging via a hashed PIN.
-1) Generate a SHA-256 hex of your PIN:
-   node -e "console.log(require('crypto').createHash('sha256').update(process.argv[1],'utf8').digest('hex'))" YOUR_PIN
-2) Create a local .env with:
-   VITE_PREVIEW_PIN_HASH=<paste_hex_here>
-3) Leave the var empty to disable the gate; rebuild to apply.
+# Binga Beach - Real World Assets in Palawan
 
-# Project Data Passkey
-To secure the project details view within the dashboard with a shared passkey:
-1) Generate a SHA-256 hex of your desired passkey using the same command as above.
-2) Add the following to your .env file:
-   VITE_PROJECT_PASSKEY_HASH=<paste_hex_here>
-3) If this variable is not set, the passkey gate will be disabled.
+This is the frontend application for Binga Beach, showcasing investment opportunities in Palawan's real estate. It is built as a responsive single-page application using React, TypeScript, and Tailwind CSS, designed to be served from a web host and interact with a backend.
+
+## Features
+
+- A public-facing landing page with detailed project information.
+- A password-protected back-office portal for data management.
+- Responsive design for desktop, tablet, and mobile devices.
+- Interactive charts to visualize financial data.
+- Detailed sections covering the business plan, market analysis, and investment opportunities.
+- A blog section with articles about the project and location.
+
+## Development
+
+To run this project locally:
+
+1.  Clone the repository.
+2.  Install dependencies: `npm install`
+3.  Start the development server: `npm run dev`
